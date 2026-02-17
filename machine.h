@@ -17,5 +17,5 @@ struct ALU_result{
     bool Z_flag;
 };
 
-void step(struct Instruction *program, struct Machine *machine, int num_of_instructions);
+void step(uint8_t *program, struct Machine *machine, int num_of_instructions);
 struct ALU_result add_8bit(uint8_t a, uint8_t b);

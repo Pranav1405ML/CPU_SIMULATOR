@@ -9,23 +9,16 @@ enum Register{
 };
 
 enum Opcode{
-    NOP,
-    HALT,
     JUMP,
+    HALT,
     MOV_IMM,
+    NOP,
     MOV_REG,
     ADD,
     JC,
     JZ,
     LOAD,
     STORE
-};
-
-struct Instruction{
-    enum Opcode opcode;  
-    enum Register destination_operand;    
-    enum Register source_operand;
-    uint8_t data;
 };
 
 #endif
