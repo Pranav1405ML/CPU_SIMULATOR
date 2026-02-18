@@ -21,4 +21,12 @@ enum Opcode{
     STORE
 };
 
+struct Decoded_instruction{
+    enum Opcode opcode;
+    enum Register dest_reg;
+    enum Register source_reg;
+    uint8_t immediate_value;
+    uint8_t instr_length;
+};
+
 #endif
