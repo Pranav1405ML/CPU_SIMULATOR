@@ -20,6 +20,6 @@ struct ALU_result{
 void step(uint8_t *program, struct Machine *machine, int num_of_instructions);
 uint8_t FETCH(int PC, int num_of_instructions, uint8_t *program);
 struct Decoded_instruction DECODE(int PC, uint8_t *program, uint8_t fetched_instr_byte);
-void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8_t *program);
-void ADVANCE(uint8_t instr_length, struct Machine *machine);
+void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8_t *program, bool *advance);
+void ADVANCE(uint8_t instr_length, struct Machine *machine, bool advance);
 struct ALU_result add_8bit(uint8_t a, uint8_t b);
