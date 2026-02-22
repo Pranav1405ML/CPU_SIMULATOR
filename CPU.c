@@ -26,6 +26,7 @@ void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
             if(machine -> is_running && advance){
               ADVANCE(decoded.instr_length, machine);
             }
+            printf("Memory[20]: %d, Memory[21]: %d\n", machine -> memory[20], machine -> memory[21]);
         }
       else
         machine -> is_running = false;
