@@ -1,5 +1,6 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
+#include <stdbool.h>
 
 enum Register{
     R0,
@@ -18,7 +19,13 @@ enum Opcode{
     JC,
     JZ,
     LOAD,
-    STORE
+    STORE,
+    OPCODE_COUNT
+};
+
+struct Instruction_metadata{
+    uint8_t length;
+    bool has_immediate;
 };
 
 struct Decoded_instruction{

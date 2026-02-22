@@ -1,6 +1,19 @@
 #include <stdio.h>
 #include "machine.h"
 
+static const struct Instruction_metadata ISA[OPCODE_COUNT] = {
+    [JUMP]    = {2, true},
+    [HALT]    = {1, false},
+    [MOV_IMM] = {2, true},
+    [NOP]     = {1, false},
+    [MOV_REG] = {1, false},
+    [ADD]     = {1, false},
+    [JC]      = {2, true},
+    [JZ]      = {2, true},
+    [LOAD]    = {2, true},
+    [STORE]   = {2, true}
+};
+
 void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
       struct Decoded_instruction decoded = {0};      
       int PC = machine -> program_counter;
@@ -10,7 +23,9 @@ void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
             uint8_t fetched_instr_byte = FETCH(PC, num_of_instructions, program);
             decoded = DECODE(PC, program, fetched_instr_byte);
             EXECUTE(&decoded, machine, program, &advance);
-            ADVANCE(decoded.instr_length, machine, advance);
+            if(machine -> is_running && advance){
+              ADVANCE(decoded.instr_length, machine);
+            }
         }
       else
         machine -> is_running = false;
@@ -26,10 +41,9 @@ struct Decoded_instruction DECODE(int PC, uint8_t *program, uint8_t fetched_inst
     temp_decoded.opcode = (enum Opcode)((fetched_instr_byte >> 4) & 0x0F);
     temp_decoded.dest_reg = (enum Register)((fetched_instr_byte >> 2) & 0x03);
     temp_decoded.source_reg = (enum Register)(fetched_instr_byte & 0x03);
-    temp_decoded.instr_length = 1;
-    if(temp_decoded.opcode == MOV_IMM || temp_decoded.opcode == LOAD || temp_decoded.opcode == STORE || temp_decoded.opcode == JC || temp_decoded.opcode == JZ || temp_decoded.opcode == JUMP){
+    temp_decoded.instr_length = ISA[temp_decoded.opcode].length;
+    if(ISA[temp_decoded.opcode].has_immediate){
        temp_decoded.immediate_value = program[PC + 1];
-       temp_decoded.instr_length = 2;
     }
     return temp_decoded;
 }
@@ -98,8 +112,7 @@ void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8
     }
 }
 
-void ADVANCE(uint8_t instr_length, struct Machine *machine, bool advance){
-    if(machine -> is_running && advance)
+void ADVANCE(uint8_t instr_length, struct Machine *machine){
         machine -> program_counter += instr_length;
 }
 
