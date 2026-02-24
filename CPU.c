@@ -21,15 +21,17 @@ void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
 
       if(machine -> program_counter < num_of_instructions){
             uint8_t fetched_instr_byte = FETCH(PC, num_of_instructions, program);
-            decoded = DECODE(PC, program, fetched_instr_byte);
+            decoded = DECODE(PC, program, fetched_instr_byte, num_of_instructions);
             EXECUTE(&decoded, machine, program, &advance);
             if(machine -> is_running && advance){
               ADVANCE(decoded.instr_length, machine);
             }
             printf("Memory[20]: %d, Memory[21]: %d\n", machine -> memory[20], machine -> memory[21]);
         }
-      else
+      else{
         machine -> is_running = false;
+        printf("Program counter surpassed the program size\n");
+      }
 }
 
 uint8_t FETCH(int PC, int num_of_instructions, uint8_t *program){
@@ -37,15 +39,27 @@ uint8_t FETCH(int PC, int num_of_instructions, uint8_t *program){
     return fetched_instr_byte;
 }
 
-struct Decoded_instruction DECODE(int PC, uint8_t *program, uint8_t fetched_instr_byte){
+struct Decoded_instruction DECODE(int PC, uint8_t *program, uint8_t fetched_instr_byte, int num_of_instructions){
     struct Decoded_instruction temp_decoded = {0};
     temp_decoded.opcode = (enum Opcode)((fetched_instr_byte >> 4) & 0x0F);
     temp_decoded.dest_reg = (enum Register)((fetched_instr_byte >> 2) & 0x03);
     temp_decoded.source_reg = (enum Register)(fetched_instr_byte & 0x03);
     temp_decoded.instr_length = ISA[temp_decoded.opcode].length;
-    if(ISA[temp_decoded.opcode].has_immediate){
-       temp_decoded.immediate_value = program[PC + 1];
+
+    if(temp_decoded.opcode >= OPCODE_COUNT){
+            printf("Invalid opcode at PC %d\n", PC);
+            temp_decoded.opcode = HALT;
     }
+    else if(ISA[temp_decoded.opcode].has_immediate){
+        if(PC + 1 < num_of_instructions)
+           temp_decoded.immediate_value = program[PC + 1];
+
+        else{
+           printf("Program counter surpassed the program size\n");
+            temp_decoded.opcode = HALT;
+        }
+    }
+    
     return temp_decoded;
 }
 
