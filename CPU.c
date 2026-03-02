@@ -26,7 +26,7 @@ void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
             if(machine -> is_running && advance){
               ADVANCE(decoded.instr_length, machine);
             }
-            printf("Memory[20]: %d, Memory[21]: %d\n", machine -> memory[20], machine -> memory[21]);
+            // printf("Memory[20]: %d, Memory[21]: %d\n", machine -> memory[20], machine -> memory[21]);
         }
       else{
         machine -> is_running = false;
@@ -59,7 +59,6 @@ struct Decoded_instruction DECODE(int PC, uint8_t *program, uint8_t fetched_inst
             temp_decoded.opcode = HALT;
         }
     }
-    
     return temp_decoded;
 }
 
@@ -82,18 +81,22 @@ void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8
         break;
 
         case MOV_IMM:
-        machine -> registers[decoded -> dest_reg] = decoded -> immediate_value;
+        machine -> Bus = decoded -> immediate_value;
+        machine -> registers[decoded -> dest_reg] = machine -> Bus;
         printf("PC = %d | Executing: MOV_IMM R%d, %d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded ->dest_reg, decoded -> immediate_value, machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
         break;
 
         case MOV_REG:
-        machine -> registers[decoded -> dest_reg] = machine -> registers[decoded -> source_reg];
+        machine -> Bus = machine -> registers[decoded -> source_reg];
+        machine -> registers[decoded -> dest_reg] = machine -> Bus;
         printf("PC = %d | Executing: MOV_REG R%d, R%d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded -> dest_reg, decoded -> source_reg ,  machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
         break;
 
         case ADD:
         post_add = add_8bit(machine -> registers[decoded -> dest_reg], machine -> registers[decoded -> source_reg]);
-        machine -> registers[decoded -> dest_reg] = post_add.result;
+        machine -> Bus = post_add.result;
+        machine -> registers[decoded -> dest_reg] = machine -> Bus;
+
         machine -> zero_flag = post_add.Z_flag;
         machine -> carry_flag = post_add.C_flag;
         printf("PC = %d | Executing: ADD R%d, R%d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded -> dest_reg, decoded -> source_reg ,  machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
@@ -117,12 +120,16 @@ void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8
 
         case LOAD:
         printf("PC = %d | Executing: LOAD R%d, %d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded -> dest_reg, decoded -> immediate_value, machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
-        machine -> registers[decoded -> dest_reg] = machine -> memory[decoded -> immediate_value];
+        machine -> Bus = machine -> memory[decoded -> immediate_value];
+        machine -> registers[decoded -> dest_reg] = machine -> Bus;
+
         break;
 
         case STORE:
         printf("PC = %d | Executing: STORE R%d, %d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded -> source_reg, decoded -> immediate_value, machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
-        machine -> memory[decoded -> immediate_value] = machine -> registers[decoded -> source_reg];
+        machine -> Bus = machine -> registers[decoded -> source_reg];
+        machine -> memory[decoded -> immediate_value] = machine -> Bus;
+
         break;
     }
 }
