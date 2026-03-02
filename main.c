@@ -1,5 +1,4 @@
 #include "machine.h"
-#include <stdio.h>
 
 int main(){
     struct Machine machine = {0};       // sets everything to zero

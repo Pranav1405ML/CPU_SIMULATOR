@@ -9,6 +9,7 @@ struct Machine{
     bool zero_flag;
     bool carry_flag;
     uint8_t memory[256];
+    uint8_t Bus;
 };
 
 struct ALU_result{
