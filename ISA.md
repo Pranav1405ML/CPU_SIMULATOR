@@ -76,19 +76,20 @@ Pipeline stages:
 
 
 # Opcode Table
-Mnemonic	Opcode(numeric)	Length	Immediate	Flags Affected    Description
-
-NOP         3               1       0           0                 Does nothing
-HALT        1               1       0           0                 Halts the CPU
-MOV_IMM     2               2       1           0                 Move a value to a register 
-MOV_REG     4               1       0           0                 Move a value from one register to another
-ADD         5               1       0           2 (zero & carry)  Add values stored in two registers and store result in destination register along with flag updation
-JUMP        0               2       1           0                 Jump to the specified byte address 
-JZ          6               2       1           0                 Jump if zero flag is activated 
-JC          7               2       1           0                 Jump if carry flag is activated
-LOAD        8               2       1           0                 Load a value into a register from memory 
-STORE       9               2       1           0                 Store a value from a register into the memory 
-
+_____________________________________________________________________________________________________________________________
+| Mnemonic	| Opcode(numeric)| Length |	Immediate	| Flags Affected |  Description                                           |
+|-----------|----------------|--------|-----------|----------------|--------------------------------------------------------|
+| NOP       | 3              | 1      | 0         |  0             |  Does nothing                                          |
+| HALT      | 1              | 1      | 0         |  0             |  Halts the CPU                                         | 
+| MOV_IMM   | 2              | 2      | 1         |  0             |  Move a value to a register                            | 
+| MOV_REG   | 4              | 1      | 0         |  0             |  Move a value from one register to another             |  
+| ADD       | 5              | 1      | 0         |  2             |  Add values stored in two register and flag updation   |
+| JUMP      | 0              | 2      | 1         |  0             |  Jump to the specified byte address                    |
+| JZ        | 6              | 2      | 1         |  0             |  Jump if zero flag is activated                        |
+| JC        | 7              | 2      | 1         |  0             |  Jump if carry flag is activated                       |
+| LOAD      | 8              | 2      | 1         |  0             |  Load a value into a register from memory              |
+| STORE     | 9              | 2      | 1         |  0             |  Store a value from a register into the memory         |
+|___________|________________|________|___________|________________|________________________________________________________|
 # Opcode numeric value is defined by enum ordering and must not be reordered without updating encoding.
 
 
