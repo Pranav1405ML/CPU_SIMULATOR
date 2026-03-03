@@ -3,7 +3,8 @@
 int main(){
     struct Machine machine = {0};       // sets everything to zero
     machine.is_running = true;          // changes is_running from zero(false) to true
-
+    machine.advance = true;
+    
     uint8_t program[] = {
         0x20, 0x05,   // MOV_IMM R0, 5  
         0x90, 0x14,   // STORE R0, 20

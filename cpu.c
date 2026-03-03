@@ -15,28 +15,38 @@ static const struct Instruction_metadata ISA[OPCODE_COUNT] = {
 };
 
 void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
-      struct Decoded_instruction decoded = {0};      
-      int PC = machine -> program_counter;
-      bool advance = true;
 
       if(machine -> program_counter < num_of_instructions){
-            uint8_t fetched_instr_byte = FETCH(PC, num_of_instructions, program);
-            decoded = DECODE(PC, program, fetched_instr_byte, num_of_instructions);
-            EXECUTE(&decoded, machine, program, &advance);
-            if(machine -> is_running && advance){
-              ADVANCE(decoded.instr_length, machine);
-            }
-            // printf("Memory[20]: %d, Memory[21]: %d\n", machine -> memory[20], machine -> memory[21]);
+        switch(machine -> current_stage){
+            case fetch:
+            machine->advance = true;
+            machine -> instruction_reg = FETCH(machine -> program_counter, program);
+            machine -> current_stage = decode;
+            break;
+            case decode:
+            machine -> decoded = DECODE(machine -> program_counter, program, machine -> instruction_reg, num_of_instructions);
+            machine -> current_stage = execute;
+            break;
+            case execute:
+            EXECUTE(&machine -> decoded, machine, program, &machine -> advance);
+            machine -> current_stage = advance;
+            break;
+            case advance:
+            if((machine -> is_running) && (machine -> advance))
+                ADVANCE(machine -> decoded.instr_length, machine);
+            machine -> current_stage = fetch;
+            break;
+           }
         }
-      else{
-        machine -> is_running = false;
-        printf("Program counter surpassed the program size\n");
-      }
+
+      else{ 
+         machine -> is_running = false;
+         printf("Program counter surpassed the program size\n");
+       }    
 }
 
-uint8_t FETCH(int PC, int num_of_instructions, uint8_t *program){
-    uint8_t fetched_instr_byte = program[PC];
-    return fetched_instr_byte;
+uint8_t FETCH(int PC, uint8_t *program){
+    return program[PC];
 }
 
 struct Decoded_instruction DECODE(int PC, uint8_t *program, uint8_t fetched_instr_byte, int num_of_instructions){

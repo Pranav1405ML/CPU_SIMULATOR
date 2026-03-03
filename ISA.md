@@ -9,14 +9,11 @@
 
 
 # Instruction Encoding Format
-Bit  7 6 5 4  | 3 2  | 1 0
-    ---------- ------ ------
-    opcode      dest    src
-    (4 bits)   (2 bits) (2 bits)
+Bit :  7 6 5 4  | 3 2  | 1 0
 
-1. Opcode occupies upper 4 bits.
-2. Destination register next 2 bits.
-3. Source register lower 2 bits.
+1. Opcode occupies upper 4 bits (4-7).
+2. Destination register next 2 bits (2, 3).
+3. Source register lower 2 bits (0, 1).
 
 
 # Two-Byte Instructions
@@ -36,7 +33,6 @@ _______________________
 | R1       | 01       |
 | R2       | 10       |
 | R3       | 11       |
-|__________|__________|
 
 
 # Memory Model
@@ -89,7 +85,7 @@ ________________________________________________________________________________
 | JC        | 7              | 2      | 1         |  0             |  Jump if carry flag is activated                       |
 | LOAD      | 8              | 2      | 1         |  0             |  Load a value into a register from memory              |
 | STORE     | 9              | 2      | 1         |  0             |  Store a value from a register into the memory         |
-|___________|________________|________|___________|________________|________________________________________________________|
+
 # Opcode numeric value is defined by enum ordering and must not be reordered without updating encoding.
 
 
