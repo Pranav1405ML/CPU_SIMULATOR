@@ -19,7 +19,7 @@ void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
       if(machine -> program_counter < num_of_instructions){
         switch(machine -> current_stage){
             case fetch:
-            machine->advance = true;
+            machine -> advance = true;
             machine -> instruction_reg = FETCH(machine -> program_counter, program);
             machine -> current_stage = decode;
             break;
