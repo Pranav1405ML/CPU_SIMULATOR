@@ -46,6 +46,8 @@ void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
 }
 
 uint8_t FETCH(int PC, uint8_t *program){
+    printf("Cycle stage: FETCH\n");
+    printf("PC = %d  ||  IR = %x\n", PC, program[PC]);
     return program[PC];
 }
 
@@ -69,6 +71,8 @@ struct Decoded_instruction DECODE(int PC, uint8_t *program, uint8_t fetched_inst
             temp_decoded.opcode = HALT;
         }
     }
+    printf("Cycle stage: DECODE\n");
+    printf("Opcode = %d  ||  Dest = R%d  ||  SRC = R%d\n", temp_decoded.opcode, temp_decoded.dest_reg, temp_decoded.source_reg);
     return temp_decoded;
 }
 
@@ -132,20 +136,23 @@ void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8
         printf("PC = %d | Executing: LOAD R%d, %d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded -> dest_reg, decoded -> immediate_value, machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
         machine -> Bus = machine -> memory[decoded -> immediate_value];
         machine -> registers[decoded -> dest_reg] = machine -> Bus;
-
         break;
 
         case STORE:
         printf("PC = %d | Executing: STORE R%d, %d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded -> source_reg, decoded -> immediate_value, machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
         machine -> Bus = machine -> registers[decoded -> source_reg];
         machine -> memory[decoded -> immediate_value] = machine -> Bus;
-
         break;
     }
+        printf("Cycle stage: EXECUTE\n");
+        printf("BUS = %d\n", machine -> Bus);
 }
 
 void ADVANCE(uint8_t instr_length, struct Machine *machine){
         machine -> program_counter += instr_length;
+
+        printf("Cycle stage: ADVANCE\n");
+        printf("PC updated = %d\n", machine -> program_counter);
 }
 
 
