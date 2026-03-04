@@ -5,7 +5,9 @@
   2. Byte-encoded instructions
   3. Variable-length instruction model
   4. 4 general purpose registers
-  5. Memory [256]
+  5. Memory [256] (256 bytes)
+  6. Shared data BUS
+  7. Clock-cycle stage execution
 
 
 # Instruction Encoding Format
@@ -20,6 +22,7 @@ Bit :  7 6 5 4  | 3 2  | 1 0
 Byte 1 → Encoded instruction
 Byte 2 → 8-bit immediate value
 + Immediate is interpreted either as literal data or absolute memory address depending on instruction.
++ 1 byte instructions have no immediate while 2 bytes instruction have an immediate value
 
 
 # Register Model
