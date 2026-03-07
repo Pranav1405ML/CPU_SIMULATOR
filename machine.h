@@ -19,6 +19,7 @@ struct Machine{
     uint8_t memory[256];
     uint8_t Bus;
     uint8_t instruction_reg;
+    uint8_t stack_pointer_reg;
     enum Stage current_stage;
     struct Decoded_instruction decoded;
 };

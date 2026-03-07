@@ -11,7 +11,9 @@ static const struct Instruction_metadata ISA[OPCODE_COUNT] = {
     [JC]      = {2, true},
     [JZ]      = {2, true},
     [LOAD]    = {2, true},
-    [STORE]   = {2, true}
+    [STORE]   = {2, true},
+    [PUSH]    = {1, false},
+    [POP]     = {1, false}
 };
 
 void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
@@ -46,7 +48,7 @@ void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
 }
 
 uint8_t FETCH(int PC, uint8_t *program){
-    printf("Cycle stage: FETCH\n");
+    printf("\nCycle stage: FETCH\n");
     printf("PC = %d  ||  IR = %x\n", PC, program[PC]);
     return program[PC];
 }
@@ -71,13 +73,15 @@ struct Decoded_instruction DECODE(int PC, uint8_t *program, uint8_t fetched_inst
             temp_decoded.opcode = HALT;
         }
     }
-    printf("Cycle stage: DECODE\n");
+    printf("\nCycle stage: DECODE\n");
     printf("Opcode = %d  ||  Dest = R%d  ||  SRC = R%d\n", temp_decoded.opcode, temp_decoded.dest_reg, temp_decoded.source_reg);
     return temp_decoded;
 }
 
 void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8_t *program, bool *advance){
     struct ALU_result post_add;
+
+    printf("\nCycle stage: EXECUTE\n");
     switch(decoded -> opcode){
         case NOP: 
         printf("PC = %d | Executing: NOP | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
@@ -143,15 +147,36 @@ void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8
         machine -> Bus = machine -> registers[decoded -> source_reg];
         machine -> memory[decoded -> immediate_value] = machine -> Bus;
         break;
+
+        case PUSH:
+        printf("PC = %d | Executing: PUSH R%d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded ->source_reg,  machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
+        if(machine -> stack_pointer_reg == 0)
+            printf("Stack overflow\n");
+        else{
+            machine -> Bus = machine -> registers[decoded -> source_reg];
+            machine -> memory[machine -> stack_pointer_reg] = machine -> Bus;
+            printf("Value at address [%d] = %d\n", machine -> stack_pointer_reg, machine -> memory[machine -> stack_pointer_reg]);
+            machine -> stack_pointer_reg--;
+            printf("Stack pointer: %d\n", machine -> stack_pointer_reg);
+        }
+        break;
+
+        case POP:
+        printf("PC = %d | Executing: POP R%d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded ->dest_reg, machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
+            machine -> stack_pointer_reg++;
+            machine -> Bus = machine -> memory[machine -> stack_pointer_reg];
+            machine -> registers[decoded -> dest_reg] = machine -> Bus;
+        printf("After POP:  R0=%d R1=%d R2=%d R3=%d\n", machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3]);
+        printf("Stack pointer: %d\n", machine -> stack_pointer_reg);
+        break;
     }
-        printf("Cycle stage: EXECUTE\n");
         printf("BUS = %d\n", machine -> Bus);
 }
 
 void ADVANCE(uint8_t instr_length, struct Machine *machine){
         machine -> program_counter += instr_length;
 
-        printf("Cycle stage: ADVANCE\n");
+        printf("\nCycle stage: ADVANCE\n");
         printf("PC updated = %d\n", machine -> program_counter);
 }
 

@@ -20,6 +20,8 @@ enum Opcode{
     JZ,
     LOAD,
     STORE,
+    PUSH,
+    POP,
     OPCODE_COUNT
 };
 
