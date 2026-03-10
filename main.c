@@ -33,6 +33,7 @@ int main(){
     //     0x10          // HALT
     // };
 
+    // Deep Stack Order
     // uint8_t program[] = {
 
     // 0x20,0x01,   // MOV_IMM R0,1
@@ -50,6 +51,7 @@ int main(){
     // 0x10         // HALT
     // };
 
+    // Register Mutation Test
     // uint8_t program[] = {
 
     // 0x20,0x05,   // MOV_IMM R0,5
@@ -62,6 +64,7 @@ int main(){
     // 0x10         // HALT
     // };
 
+    // Stack Pointer Symmetry
     // uint8_t program[] = {
 
     // 0x20,0x04,   // MOV_IMM R0,4
@@ -79,20 +82,37 @@ int main(){
     // 0x10         // HALT
     // };
 
+
+    // // Test 4 — Stack + ALU Interaction
+    // uint8_t program[] = {
+
+    // 0x20,0x0A,   // MOV_IMM R0,10
+    // 0x24,0x14,   // MOV_IMM R1,20
+
+    // 0xA0,        // PUSH R0
+    // 0xA1,        // PUSH R1
+
+    // 0x51,        // ADD R0,R1
+
+    // 0xB8,        // POP R2
+    // 0xBC,        // POP R3
+
+    // 0x10         // HALT
+    // };
+
 uint8_t program[] = {
 
-0x20,0x0A,   // MOV_IMM R0,10
-0x24,0x14,   // MOV_IMM R1,20
+0x20,0x05,   // MOV_IMM R0,5
+0xC0,0x05,   // CALL foo
+0x10,        // HALT
 
-0xA0,        // PUSH R0
-0xA1,        // PUSH R1
+0x50,        // ADD R0,R0
+0xC0,0x09,   // CALL bar
+0xD0,        // RET
 
-0x51,        // ADD R0,R1
-
-0xB8,        // POP R2
-0xBC,        // POP R3
-
-0x10         // HALT
+0x50,        // ADD R0,R0
+0x50,        // ADD R0,R0
+0xD0         // RET
 };
 
     int num_of_instructions = (sizeof(program)/ sizeof(uint8_t));

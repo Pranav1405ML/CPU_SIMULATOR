@@ -22,6 +22,8 @@ enum Opcode{
     STORE,
     PUSH,
     POP,
+    CALL, 
+    RET,
     OPCODE_COUNT
 };
 

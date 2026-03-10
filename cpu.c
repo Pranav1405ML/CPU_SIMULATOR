@@ -13,7 +13,9 @@ static const struct Instruction_metadata ISA[OPCODE_COUNT] = {
     [LOAD]    = {2, true},
     [STORE]   = {2, true},
     [PUSH]    = {1, false},
-    [POP]     = {1, false}
+    [POP]     = {1, false},
+    [CALL]    = {2, true},
+    [RET]     = {1, false}
 };
 
 void step(uint8_t *program, struct Machine *machine, int num_of_instructions){
@@ -168,6 +170,29 @@ void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8
             machine -> registers[decoded -> dest_reg] = machine -> Bus;
         printf("After POP:  R0=%d R1=%d R2=%d R3=%d\n", machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3]);
         printf("Stack pointer: %d\n", machine -> stack_pointer_reg);
+        break;
+
+        case CALL:
+        printf("PC = %d | Executing: CALL %d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded ->immediate_value, machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
+        // push pc+1 on stack
+        machine -> Bus = (machine -> program_counter) + (decoded -> instr_length) ;
+        machine -> memory[machine -> stack_pointer_reg] = machine -> Bus;
+        machine -> stack_pointer_reg--;
+
+        // jump to the immediate value (return address)
+        machine -> program_counter = decoded -> immediate_value;
+
+        // Supress advance
+        *advance = false;
+        break;
+
+        case RET: 
+        printf("PC = %d | Executing: RET | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
+        //Assume all push get their pop and we restore back to our stack pointer reg pointing the return address
+        machine -> stack_pointer_reg++;
+        machine -> Bus = machine -> memory[machine -> stack_pointer_reg];
+        machine -> program_counter = machine -> Bus;
+        *advance = false;
         break;
     }
         printf("BUS = %d\n", machine -> Bus);
