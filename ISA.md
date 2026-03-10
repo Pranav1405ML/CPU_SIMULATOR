@@ -8,6 +8,7 @@
   5. Memory [256] (256 bytes)
   6. Shared data BUS
   7. Clock-cycle stage execution
+  8. Stack Pointer
 
 
 # Instruction Encoding Format
@@ -71,7 +72,7 @@ Pipeline stages:
 1. FETCH: Read instruction byte
 2. DECODE: Extract fields + metadata
 3. EXECUTE: Mutate machine state
-4. ADVANCE: Increment PC
+4. ADVANCE: Increment Program counter
 
 
 # Opcode Table
@@ -88,6 +89,8 @@ ________________________________________________________________________________
 | JC        | 7              | 2      | 1         |  0             |  Jump if carry flag is activated                       |
 | LOAD      | 8              | 2      | 1         |  0             |  Load a value into a register from memory              |
 | STORE     | 9              | 2      | 1         |  0             |  Store a value from a register into the memory         |
+| PUSH      | 10             | 1      | 0         |  0             |  Push register value onto stack
+| POP       | 11             | 1      | 0         |  0             |  Pop value from stack into register
 
 # Opcode numeric value is defined by enum ordering and must not be reordered without updating encoding.
 
@@ -96,3 +99,26 @@ ________________________________________________________________________________
 1. Invalid opcode → halt
 2. Missing immediate byte → halt
 3. PC out of bounds → halt
+
+
+# Stack section
+1. The CPU implements a downward growing stack.
+2. Stack Pointer (SP) starts at address 255.
+3. Push operation:
+   memory[SP] = value
+   SP--
+4. Stack has a stack_pointer_reg
+5. Pop operation:
+   SP++
+   value = memory[SP]
+6. The stack resides in the same memory array as program data.
+
+
+# Data Bus
++ A shared 8-bit BUS is used for data transfers between registers, memory and  ALU.
+
++ Examples:
+- Register → BUS → Register
+- Register → BUS → Memory
+- Memory → BUS → Register
+- ALU result → BUS → Register
