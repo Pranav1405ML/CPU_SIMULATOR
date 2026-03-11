@@ -80,17 +80,20 @@ ________________________________________________________________________________
 | Mnemonic	| Opcode(numeric)| Length |	Immediate	| Flags Affected |  Description                                           |
 |-----------|----------------|--------|-----------|----------------|--------------------------------------------------------|
 | NOP       | 3              | 1      | 0         |  0             |  Does nothing                                          |
-| HALT      | 1              | 1      | 0         |  0             |  Halts the CPU                                         | 
-| MOV_IMM   | 2              | 2      | 1         |  0             |  Move a value to a register                            | 
-| MOV_REG   | 4              | 1      | 0         |  0             |  Move a value from one register to another             |  
-| ADD       | 5              | 1      | 0         |  2             |  Add values stored in two register and flag updation   |
-| JUMP      | 0              | 2      | 1         |  0             |  Jump to the specified byte address                    |
-| JZ        | 6              | 2      | 1         |  0             |  Jump if zero flag is activated                        |
-| JC        | 7              | 2      | 1         |  0             |  Jump if carry flag is activated                       |
-| LOAD      | 8              | 2      | 1         |  0             |  Load a value into a register from memory              |
-| STORE     | 9              | 2      | 1         |  0             |  Store a value from a register into the memory         |
-| PUSH      | 10             | 1      | 0         |  0             |  Push register value onto stack
-| POP       | 11             | 1      | 0         |  0             |  Pop value from stack into register
+| HALT      | 1              | 1      | 0         |  0             |  Halts the CPU                                          | 
+| MOV_IMM   | 2              | 2      | 1         |  0             |  Move a value to a register                              | 
+| MOV_REG   | 4              | 1      | 0         |  0             |  Move a value from one register to another               |  
+| ADD       | 5              | 1      | 0         |  2             |  Add values stored in two register and flag updation  |
+| JUMP      | 0              | 2      | 1         |  0             |  Jump to the specified byte address                       |
+| JZ        | 6              | 2      | 1         |  0             |  Jump if zero flag is activated                           |
+| JC        | 7              | 2      | 1         |  0             |  Jump if carry flag is activated                          |
+| LOAD      | 8              | 2      | 1         |  0             |  Load a value into a register from memory                |
+| STORE     | 9              | 2      | 1         |  0             |  Store a value from a register into the memory            |
+| PUSH      | 10             | 1      | 0         |  0             |  Push register value onto stack                        |
+| POP       | 11             | 1      | 0         |  0             |  Pop value from stack into register                   |
+| CALL      | 12             | 2      | 1         |  0             |  Call a function and store next instruction address      |
+| RET       | 13             | 1      | 0         |  0             |  Return a back to the instruction after the function call  |
+
 
 # Opcode numeric value is defined by enum ordering and must not be reordered without updating encoding.
 
@@ -112,6 +115,10 @@ ________________________________________________________________________________
    SP++
    value = memory[SP]
 6. The stack resides in the same memory array as program data.
+7. Call instruction stores the address of next instruction onto the stack and jumps to the instruction number (its immediate value)
+8. RET instruction returns back to the instruction just after call
+ 
++  Every Push done inside a call needs a respective Pop in order to restore our stack pointer to where the return address of next instruction is stored
 
 
 # Data Bus
@@ -122,3 +129,7 @@ ________________________________________________________________________________
 - Register → BUS → Memory
 - Memory → BUS → Register
 - ALU result → BUS → Register
+
+
+# Clock cycle 
++ For every step of fetch, decode, execute and advance, the step function is called again and one call is called as a clock cycle 

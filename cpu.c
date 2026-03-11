@@ -152,8 +152,10 @@ void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8
 
         case PUSH:
         printf("PC = %d | Executing: PUSH R%d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded ->source_reg,  machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
-        if(machine -> stack_pointer_reg == 0)
+        if(machine -> stack_pointer_reg == 0){
             printf("Stack overflow\n");
+            machine -> is_running = false;
+        }
         else{
             machine -> Bus = machine -> registers[decoded -> source_reg];
             machine -> memory[machine -> stack_pointer_reg] = machine -> Bus;
@@ -165,11 +167,17 @@ void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8
 
         case POP:
         printf("PC = %d | Executing: POP R%d | R0=%d R1=%d R2=%d R3=%d | Z=%d | C=%d\n", machine->program_counter, decoded ->dest_reg, machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3], machine -> zero_flag, machine -> carry_flag);
+        if(machine -> stack_pointer_reg == 255){
+            printf("Stack underflow\n");
+            machine -> is_running = false;
+        }
+        else{
             machine -> stack_pointer_reg++;
             machine -> Bus = machine -> memory[machine -> stack_pointer_reg];
             machine -> registers[decoded -> dest_reg] = machine -> Bus;
-        printf("After POP:  R0=%d R1=%d R2=%d R3=%d\n", machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3]);
-        printf("Stack pointer: %d\n", machine -> stack_pointer_reg);
+            printf("After POP:  R0=%d R1=%d R2=%d R3=%d\n", machine -> registers[0], machine -> registers[1], machine -> registers[2], machine -> registers[3]);
+            printf("Stack pointer: %d\n", machine -> stack_pointer_reg);
+        }
         break;
 
         case CALL:
