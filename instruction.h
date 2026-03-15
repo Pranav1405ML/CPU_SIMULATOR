@@ -1,6 +1,7 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
 #include <stdbool.h>
+#include <stdint.h>
 
 enum Register{
     R0,

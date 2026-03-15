@@ -17,3 +17,5 @@ static const struct Instruction_data table[OPCODE_COUNT] = {
     [RET]     = {13, 1, NO_OPERAND}
 };
 
+static const char *mnemonics[OPCODE_COUNT] = {"JUMP", "HALT", "MOV_IMM", "NOP", "MOV_REG", "ADD", "JC", "JZ", "LOAD", "STORE", "PUSH", "POP", "CALL", "RET"};
+
