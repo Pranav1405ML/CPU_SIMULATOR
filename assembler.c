@@ -24,11 +24,13 @@ void readline(){
     FILE *fp = fopen("program.asm", "r");
     if(fp == NULL){
         printf("Error opening the file.\n");
+        return;
     }
     char line[128];
     while(fgets(line, 128, fp)){
         printf("%s", line);
     }
+    fclose(fp);
 }
 
 int main(){
