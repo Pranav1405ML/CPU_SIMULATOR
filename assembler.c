@@ -1,4 +1,5 @@
 #include "assembler.h"
+#include <stdio.h>
 
 static const struct Instruction_data table[OPCODE_COUNT] = {
     [JUMP]    = {0, 2, IMM},
@@ -19,3 +20,18 @@ static const struct Instruction_data table[OPCODE_COUNT] = {
 
 static const char *mnemonics[OPCODE_COUNT] = {"JUMP", "HALT", "MOV_IMM", "NOP", "MOV_REG", "ADD", "JC", "JZ", "LOAD", "STORE", "PUSH", "POP", "CALL", "RET"};
 
+void readline(){
+    FILE *fp = fopen("program.asm", "r");
+    if(fp == NULL){
+        printf("Error opening the file.\n");
+    }
+    char line[128];
+    while(fgets(line, 128, fp)){
+        printf("%s", line);
+    }
+}
+
+int main(){
+    readline();
+    return 0;
+}
