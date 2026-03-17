@@ -1,5 +1,6 @@
 #include "assembler.h"
 #include <stdio.h>
+#include <string.h>
 
 static const struct Instruction_data table[OPCODE_COUNT] = {
     [JUMP]    = {0, 2, IMM},
@@ -27,8 +28,13 @@ void readline(){
         return;
     }
     char line[128];
+    char *token;
     while(fgets(line, 128, fp)){
-        printf("%s", line);
+        token = strtok(line, " ,");
+        while(token != NULL){
+            printf("Token: %s\n", token);
+            token = strtok(NULL, " ,");
+        }
     }
     fclose(fp);
 }
@@ -37,3 +43,5 @@ int main(){
     readline();
     return 0;
 }
+
+// gcc assembler.c -o a
