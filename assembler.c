@@ -29,10 +29,22 @@ void readline(){
     }
     char line[128];
     char *token;
+    uint8_t byte;
+
     while(fgets(line, 128, fp)){
         token = strtok(line, " ,");
         while(token != NULL){
+            
+            for(int i=0; i<OPCODE_COUNT; i++){
+                if(!strcmp(mnemonics[i], token)){
+                    // byte = i << 4;
+                    byte = i;
+                    continue;
+                }
+            }
+
             printf("Token: %s\n", token);
+            printf("Byte: %x\n", byte);
             token = strtok(NULL, " ,");
         }
     }
@@ -45,3 +57,4 @@ int main(){
 }
 
 // gcc assembler.c -o a
+

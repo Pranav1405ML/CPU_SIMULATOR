@@ -7,7 +7,8 @@ enum Register{
     R0,
     R1,
     R2,
-    R3
+    R3,
+    REG_COUNT
 };
 
 enum Opcode{

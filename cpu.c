@@ -214,4 +214,4 @@ void ADVANCE(uint8_t instr_length, struct Machine *machine){
 }
 
 
-// gcc main.c alu.c cpu.c -o cpu
+// gcc main.c alu.c cpu.c assembler.c -o cpu
