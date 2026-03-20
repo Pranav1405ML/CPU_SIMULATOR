@@ -4,7 +4,8 @@
 
 enum operand_type{
     NO_OPERAND,
-    REG,
+    S_REG,
+    D_REG,
     REG_REG,
     REG_IMM,
     IMM
