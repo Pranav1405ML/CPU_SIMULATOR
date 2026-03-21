@@ -22,12 +22,19 @@ static const struct Instruction_data table[OPCODE_COUNT] = {
 
 static const char *mnemonics[OPCODE_COUNT] = {"JUMP", "HALT", "MOV_IMM", "NOP", "MOV_REG", "ADD", "JC", "JZ", "LOAD", "STORE", "PUSH", "POP", "CALL", "RET"};
 
-void readline(){
+void tokenize(){
     FILE *fp = fopen("program.asm", "r");
     if(fp == NULL){
-        printf("Error opening the file.\n");
+        printf("Error opening the file\n");
         return;
     }
+
+    FILE *fp2 = fopen("output.txt", "w");
+    if (fp2 == NULL) {
+        printf("Error opening file for writing\n");
+        return;
+    }
+
     char line[128];
     const char *token;
     char token_array[5][8];
@@ -40,13 +47,19 @@ void readline(){
     while(fgets(line, 128, fp)){
         token = strtok(line, " ,");
         while(token != NULL){
+            char *ptr = strchr(token, '\n');       // strchr gives the address of first occurence of that \n
+            if(ptr != NULL){
+                *ptr = '\0';
+            }
+
             strcpy(token_array[token_num], token);
+
             token_num++;
             token = strtok(NULL, " ,");
-        }
+        } 
         printf("Opcode = %s, dest_reg = %s, src_reg = %s\n", token_array[0], token_array[1], token_array[2]);
 
-          for(int i=0; i<OPCODE_COUNT; i++){
+        for(int i=0; i<OPCODE_COUNT; i++){
                 if(!strcmp(mnemonics[i], token_array[0])){
                     opcode = i;
                     break;
@@ -78,21 +91,28 @@ void readline(){
             case IMM:
             imm = atoi(token_array[1]);
             break;
-        }
+         }
 
         first_byte = ((opcode << 4) | (dest_reg << 2) | (src_reg));
         second_byte = imm;
 
-        printf("First-Byte: 0x%x     Second-Byte: 0x%x\n", first_byte, second_byte);
+        printf("First-Byte: 0x%x || Second-Byte: 0x%x\n", first_byte, second_byte);
+
+        fprintf(fp2, "0x%x",first_byte);
+        if(table[opcode].length == 2){
+            fprintf(fp2, " 0x%x",second_byte);
+        }
+        fprintf(fp2, "\n");
 
         token_num = 0;
         dest_reg = src_reg = imm = 0;
     }
+    fclose(fp2);
     fclose(fp);
 }
 
 int main(){
-    readline();
+    tokenize();
     return 0;
 }
 
