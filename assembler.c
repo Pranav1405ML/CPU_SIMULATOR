@@ -24,8 +24,10 @@ static const char *mnemonics[OPCODE_COUNT] = {"JUMP", "HALT", "MOV_IMM", "NOP", 
 
 int tokenize(char *line, char token_array[][8]);
 int get_opcode(char *mnemonic);
-void parse_operands(uint8_t opcode, uint8_t *dest_reg, uint8_t *src_reg, uint8_t *imm, char token_array[][8]);
-void encode_and_write(uint8_t opcode, uint8_t dest_reg, uint8_t src_reg, uint8_t imm, FILE *fp2);
+int parse_register(char reg);
+int parse_immediate(char imm[]);
+void parse_operands(int opcode, int *dest_reg, int *src_reg, int *imm, char token_array[][8]);
+void encode_and_write(int opcode, int dest_reg, int src_reg, int imm, FILE *fp2);
 void assemble();
 
 int main(){
@@ -50,7 +52,7 @@ void assemble(){
     char token_array[5][8]; 
 
     while(fgets(line, 128, fp1)){
-        uint8_t dest_reg=0, src_reg=0, imm=0;
+        int dest_reg=0, src_reg=0, imm=0;
 
         int token_num = tokenize(line, token_array);
         if(token_num == 0) continue;
@@ -69,6 +71,10 @@ void assemble(){
         }
 
         parse_operands(opcode, &dest_reg, &src_reg, &imm, token_array);
+        if(dest_reg == -1 || src_reg == -1 || imm == -1){
+            return;
+        }
+
         encode_and_write(opcode, dest_reg, src_reg, imm, fp2);     
     }
     fclose(fp2);
@@ -96,51 +102,55 @@ int get_opcode(char *mnemonic){
     }
     return -1;
 }
-void parse_operands(uint8_t opcode, uint8_t *dest_reg, uint8_t *src_reg, uint8_t *imm, char token_array[][8]){
+int parse_register(char reg){
+    if((reg - '0') <= 3 && (reg - '0') >= 0){
+        return (reg - '0');
+    }
+    else{
+        printf("Invalid Register\n");
+        return -1;
+    } 
+}
+int parse_immediate(char imm[]){
+    int immediate = atoi(imm);
+
+    if(immediate < 256  && immediate >= 0){
+        return immediate;
+    }
+    else{
+        printf("Invalid Immediate\n");
+        return -1;
+    }
+}
+void parse_operands(int opcode, int *dest_reg, int *src_reg, int *imm, char token_array[][8]){
     switch(table[opcode].optype){
         case NO_OPERAND:
         break;
 
-        case D_REG: // PUSH has src_reg while POP has dest_reg
-        if((token_array[1][1] - '0') <= 3 && (token_array[1][1] - '0') >= 0)
-            *dest_reg = token_array[1][1] - '0';
-        else printf("Invalid Register\n");
+        case D_REG: // POP has dest_reg
+        *dest_reg = parse_register(token_array[1][1]);
         break;
 
-        case S_REG: // PUSH has src_reg while POP has dest_reg
-        if((token_array[1][1] - '0') <= 3 && (token_array[1][1] - '0') >= 0)
-            *src_reg = token_array[1][1] - '0';
-        else printf("Invalid Register\n");
+        case S_REG: // PUSH has src_reg 
+        *src_reg = parse_register(token_array[1][1]);
         break;
 
         case REG_REG:
-        if((token_array[1][1] - '0') <= 3 && (token_array[1][1] - '0') >= 0)
-            *dest_reg = token_array[1][1] - '0';
-        else printf("Invalid Register\n");
-
-        if((token_array[2][1] - '0') <= 3 && (token_array[2][1] - '0') >= 0)
-            *src_reg = token_array[2][1] - '0';
-        else printf("Invalid Register\n");
+        *dest_reg = parse_register(token_array[1][1]);
+        *src_reg = parse_register(token_array[2][1]);
         break;
 
         case REG_IMM:
-        if((token_array[1][1] - '0') <= 3 && (token_array[1][1] - '0') >= 0)
-            *dest_reg = token_array[1][1] - '0';
-        else printf("Invalid Register\n");
-
-        if(atoi(token_array[2]) < 256  && atoi(token_array[2]) >= 0)
-            *imm = atoi(token_array[2]);
-        else printf("Invalid Immediate value\n");
+        *dest_reg = parse_register(token_array[1][1]);    
+        *imm = parse_immediate(token_array[2]);
         break;
 
         case IMM:
-        if(atoi(token_array[1]) < 256  && atoi(token_array[1]) >= 0)
-            *imm = atoi(token_array[1]);
-        else printf("Invalid Immediate value\n");
+        *imm = parse_immediate(token_array[1]);
         break;
         }
 }
-void encode_and_write(uint8_t opcode, uint8_t dest_reg, uint8_t src_reg, uint8_t imm, FILE *fp2){
+void encode_and_write(int opcode, int dest_reg, int src_reg, int imm, FILE *fp2){
     uint8_t first_byte = ((opcode << 4) | (dest_reg << 2) | (src_reg));
     uint8_t second_byte = imm;
 
@@ -152,5 +162,6 @@ void encode_and_write(uint8_t opcode, uint8_t dest_reg, uint8_t src_reg, uint8_t
     }
     fprintf(fp2, "\n");
 }
+
 
 // gcc assembler.c -o a
