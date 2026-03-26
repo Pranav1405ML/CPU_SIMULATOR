@@ -6,14 +6,14 @@
 static const struct Instruction_data table[OPCODE_COUNT] = {
     [JUMP]    = {0, 2, IMM, 1},
     [HALT]    = {1, 1, NO_OPERAND, 0},
-    [MOV_IMM] = {2, 2, REG_IMM, 2},
+    [MOV_IMM] = {2, 2, D_IMM, 2},
     [NOP]     = {3, 1, NO_OPERAND, 0},
     [MOV_REG] = {4, 1, REG_REG, 2},
     [ADD]     = {5, 1, REG_REG, 2},
     [JC]      = {6, 2, IMM, 1},
     [JZ]      = {7, 2, IMM, 1},
-    [LOAD]    = {8, 2, REG_IMM, 2},
-    [STORE]   = {9, 2, REG_IMM, 2},
+    [LOAD]    = {8, 2, D_IMM, 2},
+    [STORE]   = {9, 2, S_IMM, 2},
     [PUSH]    = {10, 1, S_REG, 1},
     [POP]     = {11, 1, D_REG, 1},
     [CALL]    = {12, 2, IMM, 1},
@@ -26,7 +26,7 @@ int tokenize(char *line, char token_array[][8]);
 int get_opcode(char *mnemonic);
 int parse_register(char reg);
 int parse_immediate(char imm[]);
-void parse_operands(int opcode, int *dest_reg, int *src_reg, int *imm, char token_array[][8]);
+int parse_operands(int opcode, int *dest_reg, int *src_reg, int *imm, char token_array[][8]);
 void encode_and_write(int opcode, int dest_reg, int src_reg, int imm, FILE *fp2);
 void assemble();
 
@@ -54,8 +54,8 @@ void assemble(){
     while(fgets(line, 128, fp1)){
         int dest_reg=0, src_reg=0, imm=0;
 
-        int token_num = tokenize(line, token_array);
-        if(token_num == 0) continue;
+        int token_count = tokenize(line, token_array);
+        if(token_count == 0) continue;
 
         printf("Opcode = %s, dest = %s, src = %s\n", token_array[0], token_array[1], token_array[2]);
 
@@ -65,14 +65,14 @@ void assemble(){
             continue;
         }
 
-        if(!(token_num == (table[opcode].operand_cnt + 1))){
+        if(!(token_count == (table[opcode].operand_cnt + 1))){
             printf("Invalid No. of Operands\n\n");
             continue;
         }
 
-        parse_operands(opcode, &dest_reg, &src_reg, &imm, token_array);
-        if(dest_reg == -1 || src_reg == -1 || imm == -1){
-            return;
+        int check = parse_operands(opcode, &dest_reg, &src_reg, &imm, token_array);
+        if(check == -1){
+            continue;
         }
 
         encode_and_write(opcode, dest_reg, src_reg, imm, fp2);     
@@ -84,7 +84,7 @@ int tokenize(char *line, char token_array[][8]){
     const char *token = strtok(line, " ,");
     int cnt = 0;
     while(token != NULL){
-        char *ptr = strchr(token, '\n');                  // strchr gives the address of first occurence of that \n
+        char *ptr = strchr(token, '\n');   // strchr gives the address of first occurence of that \n
         if(ptr != NULL)  *ptr = '\0';
         
         strcpy(token_array[cnt], token);
@@ -122,7 +122,7 @@ int parse_immediate(char imm[]){
         return -1;
     }
 }
-void parse_operands(int opcode, int *dest_reg, int *src_reg, int *imm, char token_array[][8]){
+int parse_operands(int opcode, int *dest_reg, int *src_reg, int *imm, char token_array[][8]){
     switch(table[opcode].optype){
         case NO_OPERAND:
         break;
@@ -140,8 +140,13 @@ void parse_operands(int opcode, int *dest_reg, int *src_reg, int *imm, char toke
         *src_reg = parse_register(token_array[2][1]);
         break;
 
-        case REG_IMM:
+        case D_IMM:
         *dest_reg = parse_register(token_array[1][1]);    
+        *imm = parse_immediate(token_array[2]);
+        break;
+
+        case S_IMM:
+        *src_reg = parse_register(token_array[1][1]);    
         *imm = parse_immediate(token_array[2]);
         break;
 
@@ -149,6 +154,11 @@ void parse_operands(int opcode, int *dest_reg, int *src_reg, int *imm, char toke
         *imm = parse_immediate(token_array[1]);
         break;
         }
+
+        if(*dest_reg == -1 || *src_reg == -1 || *imm == -1){
+            return -1;
+        }
+        return 1;
 }
 void encode_and_write(int opcode, int dest_reg, int src_reg, int imm, FILE *fp2){
     uint8_t first_byte = ((opcode << 4) | (dest_reg << 2) | (src_reg));

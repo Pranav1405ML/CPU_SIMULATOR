@@ -7,7 +7,8 @@ enum operand_type{
     S_REG,
     D_REG,
     REG_REG,
-    REG_IMM,
+    D_IMM,
+    S_IMM,
     IMM
 };
 
