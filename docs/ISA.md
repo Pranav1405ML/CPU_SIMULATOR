@@ -76,24 +76,24 @@ Pipeline stages:
 
 
 # Opcode Table
-_____________________________________________________________________________________________________________________________
-| Mnemonic	| Opcode(numeric)| Length |	Immediate	| Flags Affected |  Description                                           |
-|-----------|----------------|--------|-----------|----------------|--------------------------------------------------------|
-| NOP       | 3              | 1      | 0         |  0             |  Does nothing                                          |
-| HALT      | 1              | 1      | 0         |  0             |  Halts the CPU                                          | 
-| MOV_IMM   | 2              | 2      | 1         |  0             |  Move a value to a register                              | 
-| MOV_REG   | 4              | 1      | 0         |  0             |  Move a value from one register to another               |  
-| ADD       | 5              | 1      | 0         |  2             |  Add values stored in two register and flag updation  |
-| JUMP      | 0              | 2      | 1         |  0             |  Jump to the specified byte address                       |
-| JZ        | 6              | 2      | 1         |  0             |  Jump if zero flag is activated                           |
-| JC        | 7              | 2      | 1         |  0             |  Jump if carry flag is activated                          |
-| LOAD      | 8              | 2      | 1         |  0             |  Load a value into a register from memory                |
-| STORE     | 9              | 2      | 1         |  0             |  Store a value from a register into the memory            |
-| PUSH      | 10             | 1      | 0         |  0             |  Push register value onto stack                        |
-| POP       | 11             | 1      | 0         |  0             |  Pop value from stack into register                   |
-| CALL      | 12             | 2      | 1         |  0             |  Call a function and store next instruction address      |
-| RET       | 13             | 1      | 0         |  0             |  Return a back to the instruction after the function call  |
-
+___________________________________________________________________________________________________________________________________
+| Mnemonic	| Opcode(numeric)| Length |	Immediate	| Flags Affected |  Description                                             |
+|-----------|----------------|--------|---------------|----------------|----------------------------------------------------------|
+| NOP       | 3              | 1      | 0             |  0             |  Does nothing                                            |
+| HALT      | 1              | 1      | 0             |  0             |  Halts the CPU                                           | 
+| MOV_IMM   | 2              | 2      | 1             |  0             |  Move a value to a register                              | 
+| MOV_REG   | 4              | 1      | 0             |  0             |  Move a value from one register to another               |  
+| ADD       | 5              | 1      | 0             |  2             |  Add values stored in two register and flag updation     |
+| JUMP      | 0              | 2      | 1             |  0             |  Jump to the specified byte address                      |
+| JC        | 6              | 2      | 1             |  0             |  Jump if carry flag is activated                         |
+| JZ        | 7              | 2      | 1             |  0             |  Jump if zero flag is activated                          |
+| LOAD      | 8              | 2      | 1             |  0             |  Load a value into a register from memory                |
+| STORE     | 9              | 2      | 1             |  0             |  Store a value from a register into the memory           |
+| PUSH      | 10             | 1      | 0             |  0             |  Push register value onto stack                          |
+| POP       | 11             | 1      | 0             |  0             |  Pop value from stack into register                      |
+| CALL      | 12             | 2      | 1             |  0             |  Call a function and store next instruction address      |
+| RET       | 13             | 1      | 0             |  0             |  Return a back to the instruction after the function call|
+-----------------------------------------------------------------------------------------------------------------------------------
 
 # Opcode numeric value is defined by enum ordering and must not be reordered without updating encoding.
 

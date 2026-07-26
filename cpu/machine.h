@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
-#include "instruction.h"
+#include "../instruction/instruction.h"
 
 enum Stage{
     fetch,

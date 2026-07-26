@@ -12,10 +12,3 @@ R1
 R2
 R3
 
-<!-- # Label syntax:
-label_name:
-(eg- loop: ) -->
-
-# Comment syntax:
-; comment
-

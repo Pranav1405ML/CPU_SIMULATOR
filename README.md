@@ -1,134 +1,146 @@
 # Tiny CPU & Assembler Project
 
-An 8-bit byte-encoded CPU simulator and custom assembler written in C.
+Welcome to the **Tiny CPU & Assembler** project! This repository contains a custom 8-bit CPU simulator and its accompanying assembler, entirely written in C. It is designed to be an educational tool for understanding processor architecture, instruction pipelines, and assembly language translation.
 
 ---
 
-## Features
-- **8-Bit Processor Simulation**: Features 4 general-purpose 8-bit registers (`R0`–`R3`), 256 bytes of unified RAM, Zero (`Z`) & Carry (`C`) flags, and a downward-growing stack starting at memory address `255`.
-- **4-Stage Cycle Pipeline**: `FETCH` $\rightarrow$ `DECODE` $\rightarrow$ `EXECUTE` $\rightarrow$ `ADVANCE`.
-- **Custom 2-Pass/1-Pass Assembler**: Translates assembly mnemonic code into 8-bit binary hex output. Supports comments (`;` or `#`), case-insensitive mnemonics, and custom labels/address offsets.
-- **Dynamic Binary Loader**: The CPU directly loads and executes assembled hex output files (`output.txt`).
+## 🌟 Key Features
+
+- **8-Bit Processor Simulation:**
+  - 4 general-purpose 8-bit registers (`R0` to `R3`).
+  - 256 bytes of unified RAM.
+  - Zero (`Z`) and Carry (`C`) flags for conditional branching.
+  - Downward-growing stack starting at memory address `255`.
+- **4-Stage Cycle Pipeline:**
+  - Accurately models the `FETCH` $\rightarrow$ `DECODE` $\rightarrow$ `EXECUTE` $\rightarrow$ `ADVANCE` instruction lifecycle.
+- **Custom Assembler:**
+  - Translates mnemonic code into 8-bit binary machine code.
+  - Case-insensitive mnemonics and comment support (`;`).
+- **Dynamic Binary Execution:**
+  - The CPU runner natively assembles, loads, and executes the default assembly file in one seamless step, outputting binary to `output.txt`.
 
 ---
 
-## Project Structure
-| File | Description |
-|---|---|
-| [instruction.h](file:///C:/Users/ganes/OneDrive/Desktop/Tiny_CPU/instruction.h) | Opcode definitions, register enums, and instruction structures |
-| [assembler.h](file:///C:/Users/ganes/OneDrive/Desktop/Tiny_CPU/assembler.h) | Assembler operand types and instruction metadata layout |
-| [assembler.c](file:///C:/Users/ganes/OneDrive/Desktop/Tiny_CPU/assembler.c) | Assembler implementation (parses assembly & encodes bytes) |
-| [machine.h](file:///C:/Users/ganes/OneDrive/Desktop/Tiny_CPU/machine.h) | CPU state structure, stage enum, and function declarations |
-| [alu.c](file:///C:/Users/ganes/OneDrive/Desktop/Tiny_CPU/alu.c) | Bitwise 8-bit ALU adder with Carry & Zero flag generation |
-| [cpu.c](file:///C:/Users/ganes/OneDrive/Desktop/Tiny_CPU/cpu.c) | CPU clock cycle engine (`FETCH`, `DECODE`, `EXECUTE`, `ADVANCE`) |
-| [main.c](file:///C:/Users/ganes/OneDrive/Desktop/Tiny_CPU/main.c) | Main entry point; loads binary machine code from hex file and runs CPU |
-| [ISA.md](file:///C:/Users/ganes/OneDrive/Desktop/Tiny_CPU/ISA.md) | Instruction Set Architecture reference specification |
-| [assembly_syntax.md](file:///C:/Users/ganes/OneDrive/Desktop/Tiny_CPU/assembly_syntax.md) | Quick assembly language reference guide |
-| [square.asm](file:///C:/Users/ganes/OneDrive/Desktop/Tiny_CPU/square.asm) | Assembly program that computes $N^2$ (e.g. $5^2 = 25$) |
+## 📂 Project Structure
+
+- **`main.c`**: Entry point; orchestrates assembly of `programs/program.asm`, loading, and CPU execution.
+- **`cpu/`**: Contains the CPU clock cycle engine (`cpu.c`, `machine.h`) and ALU (`alu.c`).
+- **`assembler/`**: The assembler implementation for parsing and encoding instructions.
+- **`instruction/`**: Opcode definitions, register enumerations, and structures.
+- **`docs/`**: Documentation including the Instruction Set Architecture (`ISA.md`) and assembly syntax guides.
+- **`programs/`**: Contains the assembly programs (currently `program.asm` is executed by default).
 
 ---
 
-## Instruction Set Architecture (ISA)
+## 🛠 Instruction Set Architecture (ISA)
 
-### Instruction Encoding Format
-Each instruction consists of a **1-byte header**, optionally followed by a **1-byte immediate value**:
+### Encoding Format
+Each instruction uses a **1-byte header**, followed by an optional **1-byte immediate value** or address.
 
+```text
+Bit:   7  6  5  4 |  3  2 |  1  0
+      [  Opcode   | Dest  |  Src  ]
 ```
-Bit:  7 6 5 4 | 3 2 | 1 0
-     [ Opcode  | Dest| Src ]
-```
-- **Opcode** (Bits 7..4): 4-bit instruction opcode.
-- **Destination Register** (Bits 3..2): 2-bit code (`00`=R0, `01`=R1, `10`=R2, `11`=R3).
-- **Source Register** (Bits 1..0): 2-bit code (`00`=R0, `01`=R1, `10`=R2, `11`=R3).
+- **Opcode** (Bits 7-4): The 4-bit identifier for the instruction.
+- **Destination** (Bits 3-2): Register code (`00`=R0, `01`=R1, `10`=R2, `11`=R3).
+- **Source** (Bits 1-0): Register code (same as Destination).
 
-### Opcode Summary Table
-| Mnemonic | Opcode (Dec) | Opcode (Hex) | Length (Bytes) | Operand Format | Description |
-|---|---|---|---|---|---|
-| `JUMP` | 0 | `0x0` | 2 | `JUMP addr` | Unconditional jump to byte address |
-| `HALT` | 1 | `0x1` | 1 | `HALT` | Stop machine execution |
-| `MOV_IMM` | 2 | `0x2` | 2 | `MOV_IMM dest, imm` | Load 8-bit immediate into register |
-| `NOP` | 3 | `0x3` | 1 | `NOP` | No operation |
-| `MOV_REG` | 4 | `0x4` | 1 | `MOV_REG dest, src` | Copy source register to dest register |
-| `ADD` | 5 | `0x5` | 1 | `ADD dest, src` | Add src to dest; updates Z & C flags |
-| `JC` | 6 | `0x6` | 2 | `JC addr` | Jump if Carry flag (C) is set |
-| `JZ` | 7 | `0x7` | 2 | `JZ addr` | Jump if Zero flag (Z) is set |
-| `LOAD` | 8 | `0x8` | 2 | `LOAD dest, addr` | Load byte from RAM address into dest |
-| `STORE` | 9 | `0x9` | 2 | `STORE src, addr` | Store byte from src into RAM address |
-| `PUSH` | 10 | `0xA` | 1 | `PUSH src` | Push src register onto stack (`SP--`) |
-| `POP` | 11 | `0xB` | 1 | `POP dest` | Pop from stack into dest register (`SP++`) |
-| `CALL` | 12 | `0xC` | 2 | `CALL addr` | Push next PC onto stack and jump to address |
-| `RET` | 13 | `0xD` | 1 | `RET` | Pop return address from stack into PC |
+### Available Instructions
+A quick reference of the supported instructions. For a deep dive, check out the full ISA reference in the docs.
+
+| Mnemonic | Opcode (Hex) | Format | Description |
+|---|---|---|---|
+| `JUMP` | `0x0` | `JUMP addr` | Unconditional jump. |
+| `HALT` | `0x1` | `HALT` | Stop execution. |
+| `MOV_IMM`| `0x2` | `MOV_IMM dest, imm`| Load 8-bit immediate. |
+| `NOP` | `0x3` | `NOP` | No operation. |
+| `MOV_REG`| `0x4` | `MOV_REG dest, src`| Copy register to register. |
+| `ADD` | `0x5` | `ADD dest, src` | Add and update flags. |
+| `JC` | `0x6` | `JC addr` | Jump if Carry (C) set. |
+| `JZ` | `0x7` | `JZ addr` | Jump if Zero (Z) set. |
+| `LOAD` | `0x8` | `LOAD dest, addr` | Load from RAM. |
+| `STORE` | `0x9` | `STORE src, addr` | Store to RAM. |
+| `PUSH` | `0xA` | `PUSH src` | Push to stack. |
+| `POP` | `0xB` | `POP dest` | Pop from stack. |
+| `CALL` | `0xC` | `CALL addr` | Subroutine call. |
+| `RET` | `0xD` | `RET` | Subroutine return. |
 
 ---
 
-## Build & Execution Instructions
+## 🚀 Getting Started & Execution Flow
 
-### 1. Build Unified Executable
-Compile the integrated CPU runner using GCC:
+The CPU simulation does **not** currently accept command-line arguments. Instead, it is hardcoded to read and assemble `programs/program.asm`.
+
+### 1. Write your Assembly Code
+Edit the file at `programs/program.asm` with your desired 8-bit instructions.
+
+### 2. Build and Run
+You can easily compile and run the project using the provided `makefile`. From the root directory, run:
+
 ```bash
-gcc main.c assembler.c cpu.c alu.c -o tiny_cpu.exe
+mingw32-make run
+# Or simply 'make run' on Unix-like systems
 ```
 
-### 2. Single-Step Assembly & Execution Workflow
-Pass any `.asm` file directly to `tiny_cpu.exe` (or use `run.bat`):
+This command will:
+1. Compile the C source files into an executable named `cpu`.
+2. Automatically run the executable.
+3. The executable will read `programs/program.asm`, assemble it, output the binary hex to `output.txt`, and execute the instructions step-by-step.
 
-```bash
-# Run square.asm
-.\tiny_cpu.exe square.asm
-
-# Or using the helper script
-.\run.bat square.asm
-```
-
-This single command will:
-1. Parse and assemble your `.asm` file into machine code in memory.
-2. Save the machine code bytes to `output.txt` for inspection.
-3. Automatically load the binary bytes into the 256-byte CPU memory.
-4. Execute the CPU clock cycle loop until `HALT` is reached.
-5. Print the step-by-step trace and final CPU state (registers, memory, flags).
-
+*(To only build the project without running, you can use `mingw32-make` or `make`.)*
 
 ---
 
-## Example: Square Calculation (`square.asm`)
-Below is an example assembly program that calculates the square of a number ($N^2$):
+## 💻 Example: Square Calculation (`program.asm`)
+
+The default `program.asm` is configured to calculate the square of a number $N$ ($N^2$). Here is how it calculates $15^2 = 225$:
 
 ```assembly
-; Load N = 5 into R0
-MOV_IMM R0, 5
+; Byte 0 (len 2): Load N = 15 into R0
+MOV_IMM R0, 15
 
-; Initialize accumulator R1 = 0
+; Byte 2 (len 2): Initialize result accumulator R1 = 0
 MOV_IMM R1, 0
 
-; Copy loop counter N into R2
+; Byte 4 (len 1): Copy loop counter N into R2
 MOV_REG R2, R0
 
-; Load -1 (255 in 2's complement) into R3
+; Byte 5 (len 2): Load -1 (255 in 2's complement) into R3 for decrementing
 MOV_IMM R3, 255
 
-; Loop Check (Byte 7): Jump to STORE (Byte 13) when R2 == 0
+; --- LOOP START (Byte Address 7) ---
+; Byte 7 (len 2): If loop counter R2 == 0 (Z flag active), jump to STORE at Byte 13
 JZ 13
 
-; R1 = R1 + N
+; Byte 9 (len 1): Accumulate: R1 = R1 + N (R0)
 ADD R1, R0
 
-; Decrement loop counter R2 (updates Z flag when R2 reaches 0)
+; Byte 10 (len 1): Decrement loop counter (updates Z flag when R2 reaches 0)
 ADD R2, R3
 
-; Jump back to loop start
+; Byte 11 (len 2): Jump back to loop condition check at Byte 7
 JUMP 7
+; --- LOOP END ---
 
-; Store result (25) into memory address 50
+; Byte 13 (len 2): Store squared result (225) into memory address 50
 STORE R1, 50
 
-; Halt execution
+; Byte 15 (len 1): Halt CPU execution
 HALT
 ```
 
-**Output on execution:**
-```
+**Expected Output on Execution:**
+```text
+...
 === CPU EXECUTION HALTED ===
---- Final Machine State ---
-PC: 15 | SP: 255 | Z: 1 | C: 1
-Registers: R0=5, R1=25, R2=0, R3=255
+
+====================================================
+FINAL MACHINE STATE:
+----------------------------------------------------
+PC: 15  | SP: 255 | Zero Flag (Z): 1 | Carry Flag (C): 1
+Registers: R0 = 15, R1 = 225, R2 = 0, R3 = 255
+Memory[50] = 225 (Result storage)
+====================================================
 ```
+
+Enjoy exploring the fundamentals of computer architecture with Tiny CPU!

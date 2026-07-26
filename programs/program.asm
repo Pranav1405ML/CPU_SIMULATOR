@@ -1,11 +1,12 @@
 ; =========================================================
 ; Square Calculation Program for 8-bit Tiny CPU
 ; Computes N^2 where N is loaded into R0
-; Example: N = 5 -> Result = 25 (0x19 stored in R1 and memory[50])
+; Example: N = 15 -> Result = 225 (0x19 stored in R1 and memory[50])
 ; =========================================================
 
-; Byte 0 (len 2): Load N = 5 into R0
-MOV_IMM R0, 5
+; Byte 0 (len 2): Load N = 15 into R0
+; You can change this N as you wish but pay attention to the fact that its an 8-bit CPU and sqaures above 255 will overflow for eg: 256 becomes 1 
+MOV_IMM R0, 15
 
 ; Byte 2 (len 2): Initialize result accumulator R1 = 0
 MOV_IMM R1, 0
