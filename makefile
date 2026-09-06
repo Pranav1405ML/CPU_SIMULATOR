@@ -12,7 +12,7 @@ SRC = \
 	assembler/assembler.c
 
 # Output executable
-TARGET = cpu
+TARGET = tiny_cpu
 
 # Default target
 all: $(TARGET)
