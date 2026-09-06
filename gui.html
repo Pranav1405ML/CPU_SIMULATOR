@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiny CPU Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-card: #1a2234;
+  --bg-card-hover: #1e2a40;
+  --bg-input: #0d1321;
+  --border: #2a3a5c;
+  --border-active: #4f7df7;
+  --text-primary: #e8ecf4;
+  --text-secondary: #8b98b5;
+  --text-dim: #5a6a8a;
+  --accent: #4f7df7;
+  --accent-glow: rgba(79,125,247,0.25);
+  --green: #34d399;
+  --green-glow: rgba(52,211,153,0.2);
+  --red: #f87171;
+  --red-glow: rgba(248,113,113,0.2);
+  --yellow: #fbbf24;
+  --yellow-glow: rgba(251,191,36,0.2);
+  --purple: #a78bfa;
+  --purple-glow: rgba(167,139,250,0.2);
+  --cyan: #22d3ee;
+  --cyan-glow: rgba(34,211,238,0.2);
+  --orange: #fb923c;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── Header ─── */
+.header {
+  background: linear-gradient(135deg, #111827 0%, #1a2234 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-title .chip-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.header-title h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.header-title h1 span { color: var(--accent); }
+
+.header-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* ─── Controls ─── */
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.btn:hover { border-color: var(--border-active); background: var(--bg-card-hover); }
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #3a5fd9);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+.btn-primary:hover { box-shadow: 0 0 24px var(--accent-glow); border-color: var(--accent); }
+
+.btn-green { background: linear-gradient(135deg, #059669, #047857); border-color: var(--green); color: #fff; box-shadow: 0 0 16px var(--green-glow); }
+.btn-green:hover { box-shadow: 0 0 24px var(--green-glow); }
+
+.btn-red { background: linear-gradient(135deg, #dc2626, #b91c1c); border-color: var(--red); color: #fff; box-shadow: 0 0 12px var(--red-glow); }
+
+.speed-control {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-secondary);
+}
+
+.speed-control input[type="range"] {
+  width: 80px; accent-color: var(--accent);
+}
+
+/* ─── Main Layout ─── */
+.main {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  height: calc(100vh - 65px);
+}
+
+/* ─── Code Editor ─── */
+.editor-panel {
+  grid-row: 1 / 3;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+}
+
+.panel-header {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.panel-header .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green-glow);
+}
+
+.panel-header .dot.error {
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red-glow);
+}
+
+.editor-wrap {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.line-numbers {
+  padding: 12px 0;
+  width: 40px;
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.65;
+  padding-right: 10px;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  user-select: none;
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+#code-editor {
+  flex: 1;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  padding: 12px;
+  border: none;
+  outline: none;
+  resize: none;
+  tab-size: 4;
+  white-space: pre;
+  overflow-y: auto;
+}
+
+/* ─── Right area ─── */
+.right-area {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ─── CPU Visual ─── */
+.cpu-visual {
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.card:hover { border-color: var(--border-active); }
+
+.card-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.card-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.card.active { box-shadow: 0 0 20px var(--accent-glow); border-color: var(--accent); }
+
+/* ─── Register bank ─── */
+.registers-section {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.register-bank {
+  display: flex;
+  gap: 12px;
+}
+
+.register-box {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-box.changed {
+  border-color: var(--green);
+  box-shadow: 0 0 16px var(--green-glow);
+}
+
+.register-box .reg-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.register-box .reg-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.register-box .reg-hex {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.register-box .reg-bin {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
+/* ─── Flags + Pipeline ─── */
+.flags-pipeline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.flag-row {
+  display: flex;
+  gap: 12px;
+}
+
+.flag-box {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+}
+
+.flag-box .flag-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.flag-box .flag-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.flag-box.on {
+  border-color: var(--yellow);
+  box-shadow: 0 0 12px var(--yellow-glow);
+}
+.flag-box.on .flag-val { color: var(--yellow); }
+.flag-box.off .flag-val { color: var(--text-dim); }
+
+/* pipeline */
+.pipeline {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pipe-stage {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  transition: all 0.3s ease;
+}
+
+.pipe-stage.active {
+  background: linear-gradient(135deg, var(--accent), #3a5fd9);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.pipe-arrow {
+  color: var(--text-dim);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* ─── Bottom area: Log + Memory ─── */
+.bottom-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Log */
+.log-panel {
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#log-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+#log-output .log-fetch { color: var(--cyan); }
+#log-output .log-decode { color: var(--purple); }
+#log-output .log-execute { color: var(--green); }
+#log-output .log-advance { color: var(--orange); }
+#log-output .log-error { color: var(--red); }
+#log-output .log-info { color: var(--text-dim); }
+
+/* Memory */
+.memory-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.memory-grid-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: 40px repeat(16, 1fr);
+  gap: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+
+.mem-header {
+  color: var(--text-dim);
+  font-weight: 600;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.mem-row-label {
+  color: var(--text-dim);
+  font-weight: 600;
+  text-align: right;
+  padding: 4px 6px 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.mem-cell {
+  text-align: center;
+  padding: 4px 2px;
+  border-radius: 3px;
+  color: var(--text-dim);
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.mem-cell.nonzero { color: var(--text-primary); background: rgba(79,125,247,0.08); }
+.mem-cell.stack { background: rgba(251,191,36,0.1); color: var(--yellow); }
+.mem-cell.changed { background: rgba(52,211,153,0.15); color: var(--green); }
+.mem-cell.pc-here { background: rgba(79,125,247,0.2); color: var(--accent); }
+
+.mem-cell:hover {
+  background: rgba(79,125,247,0.15);
+  color: var(--text-primary);
+}
+
+/* ─── Status bar ─── */
+.status-bar {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  padding: 6px 24px;
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+/* ─── Tooltip ─── */
+.mem-cell[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  white-space: nowrap;
+  z-index: 10;
+  color: var(--text-primary);
+}
+
+.mem-cell { position: relative; }
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+/* ─── Animations ─── */
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 0 8px var(--green-glow); }
+  50% { box-shadow: 0 0 20px var(--green-glow); }
+}
+
+.register-box.changed { animation: pulseGreen 0.6s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#log-output div { animation: fadeIn 0.15s ease; }
+
+/* ─── Responsive ─── */
+@media (max-width: 1200px) {
+  .main { grid-template-columns: 280px 1fr; }
+  .cpu-visual { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ─── Sample selector ─── */
+.sample-select {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  padding: 6px 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.sample-select:focus { outline: none; border-color: var(--accent); }
+.sample-select option { background: var(--bg-card); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header class="header">
+  <div class="header-title">
+    <div class="chip-icon">⚡</div>
+    <div>
+      <h1>Tiny <span>CPU</span></h1>
+      <div class="header-subtitle">8-bit Processor Simulator &amp; Assembler</div>
+    </div>
+  </div>
+  <div class="controls">
+    <select id="sample-select" class="sample-select" title="Load a sample program">
+      <option value="">Load Example...</option>
+      <option value="square">N² Calculator</option>
+      <option value="fibonacci">Fibonacci</option>
+      <option value="countdown">Countdown</option>
+      <option value="subroutine">Subroutine (CALL/RET)</option>
+    </select>
+    <button class="btn" id="btn-assemble" title="Assemble code (Ctrl+Enter)">🔧 Assemble</button>
+    <button class="btn btn-primary" id="btn-step" title="Execute one pipeline stage">⏭ Step</button>
+    <button class="btn btn-green" id="btn-run" title="Run to completion">▶ Run</button>
+    <button class="btn btn-red" id="btn-reset" title="Reset machine state">⟳ Reset</button>
+    <div class="speed-control">
+      <span>Speed</span>
+      <input type="range" id="speed-slider" min="1" max="100" value="50" title="Execution speed">
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<div class="main">
+
+  <!-- CODE EDITOR -->
+  <div class="editor-panel">
+    <div class="panel-header">
+      <div class="dot" id="editor-dot"></div>
+      <span id="editor-status">Assembly Editor</span>
+    </div>
+    <div class="editor-wrap">
+      <div class="line-numbers" id="line-numbers"></div>
+      <textarea id="code-editor" spellcheck="false">; =========================================================
+; Square Calculation Program for 8-bit Tiny CPU
+; Computes N^2 where N is loaded into R0
+; =========================================================
+
+; Load N = 5 into R0
+MOV_IMM R0, 5
+
+; Initialize result accumulator R1 = 0
+MOV_IMM R1, 0
+
+; Copy loop counter N into R2
+MOV_REG R2, R0
+
+; Load -1 (255 in two's complement) into R3
+MOV_IMM R3, 255
+
+; --- LOOP START (Byte 7) ---
+; If R2 == 0 jump to STORE at byte 13
+JZ 13
+
+; Accumulate: R1 = R1 + R0
+ADD R1, R0
+
+; Decrement: R2 = R2 + 255
+ADD R2, R3
+
+; Jump back to loop check at byte 7
+JUMP 7
+; --- LOOP END ---
+
+; Store result into memory[50]
+STORE R1, 50
+
+; Halt
+HALT</textarea>
+    </div>
+  </div>
+
+  <!-- RIGHT AREA -->
+  <div class="right-area">
+
+    <!-- CPU Overview Cards -->
+    <div class="cpu-visual">
+      <div class="card" id="card-pc">
+        <div class="card-label">Program Counter</div>
+        <div class="card-value" id="val-pc" style="color:var(--accent)">0</div>
+      </div>
+      <div class="card" id="card-sp">
+        <div class="card-label">Stack Pointer</div>
+        <div class="card-value" id="val-sp" style="color:var(--yellow)">255</div>
+      </div>
+      <div class="card" id="card-bus">
+        <div class="card-label">Data Bus</div>
+        <div class="card-value" id="val-bus" style="color:var(--cyan)">0</div>
+      </div>
+      <div class="card" id="card-ir">
+        <div class="card-label">Instruction Reg</div>
+        <div class="card-value" id="val-ir" style="color:var(--purple)">0x00</div>
+      </div>
+    </div>
+
+    <!-- Registers -->
+    <div class="registers-section">
+      <div class="section-title">Register Bank</div>
+      <div class="register-bank">
+        <div class="register-box" id="rbox-0">
+          <div class="reg-name">R0</div>
+          <div class="reg-val" id="reg-0">0</div>
+          <div class="reg-hex" id="reghex-0">0x00</div>
+          <div class="reg-bin" id="regbin-0">00000000</div>
+        </div>
+        <div class="register-box" id="rbox-1">
+          <div class="reg-name">R1</div>
+          <div class="reg-val" id="reg-1">0</div>
+          <div class="reg-hex" id="reghex-1">0x00</div>
+          <div class="reg-bin" id="regbin-1">00000000</div>
+        </div>
+        <div class="register-box" id="rbox-2">
+          <div class="reg-name">R2</div>
+          <div class="reg-val" id="reg-2">0</div>
+          <div class="reg-hex" id="reghex-2">0x00</div>
+          <div class="reg-bin" id="regbin-2">00000000</div>
+        </div>
+        <div class="register-box" id="rbox-3">
+          <div class="reg-name">R3</div>
+          <div class="reg-val" id="reg-3">0</div>
+          <div class="reg-hex" id="reghex-3">0x00</div>
+          <div class="reg-bin" id="regbin-3">00000000</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flags + Pipeline -->
+    <div class="flags-pipeline">
+      <div>
+        <div class="section-title">Flags</div>
+        <div class="flag-row">
+          <div class="flag-box off" id="flag-z-box">
+            <span class="flag-name">Zero (Z)</span>
+            <span class="flag-val" id="flag-z">0</span>
+          </div>
+          <div class="flag-box off" id="flag-c-box">
+            <span class="flag-name">Carry (C)</span>
+            <span class="flag-val" id="flag-c">0</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Pipeline Stage</div>
+        <div class="pipeline">
+          <div class="pipe-stage active" id="pipe-fetch">Fetch</div>
+          <span class="pipe-arrow">→</span>
+          <div class="pipe-stage" id="pipe-decode">Decode</div>
+          <span class="pipe-arrow">→</span>
+          <div class="pipe-stage" id="pipe-execute">Execute</div>
+          <span class="pipe-arrow">→</span>
+          <div class="pipe-stage" id="pipe-advance">Advance</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log + Memory -->
+    <div class="bottom-area">
+      <div class="log-panel">
+        <div class="panel-header">
+          <span>Execution Log</span>
+          <button class="btn" id="btn-clear-log" style="padding:4px 10px;font-size:11px;margin-left:auto;">Clear</button>
+        </div>
+        <div id="log-output"></div>
+      </div>
+      <div class="memory-panel">
+        <div class="panel-header"><span>Memory (256 bytes)</span></div>
+        <div class="memory-grid-wrap">
+          <div class="memory-grid" id="memory-grid"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <span id="status-left">Ready — write assembly and click Assemble</span>
+  <span id="status-right">Tiny CPU v1.0 | 8-bit | 4 registers | 256B memory</span>
+</div>
+
+<!-- ═══════════ JAVASCRIPT ═══════════ -->
+<script>
+// ─── ISA Definition ───
+const OPCODES = {
+  JUMP:0, HALT:1, MOV_IMM:2, NOP:3, MOV_REG:4, ADD:5,
+  JC:6, JZ:7, LOAD:8, STORE:9, PUSH:10, POP:11, CALL:12, RET:13
+};
+const OPCODE_NAMES = ['JUMP','HALT','MOV_IMM','NOP','MOV_REG','ADD','JC','JZ','LOAD','STORE','PUSH','POP','CALL','RET'];
+const ISA_META = [
+  {len:2, hasImm:true},  // JUMP
+  {len:1, hasImm:false}, // HALT
+  {len:2, hasImm:true},  // MOV_IMM
+  {len:1, hasImm:false}, // NOP
+  {len:1, hasImm:false}, // MOV_REG
+  {len:1, hasImm:false}, // ADD
+  {len:2, hasImm:true},  // JC
+  {len:2, hasImm:true},  // JZ
+  {len:2, hasImm:true},  // LOAD
+  {len:2, hasImm:true},  // STORE
+  {len:1, hasImm:false}, // PUSH
+  {len:1, hasImm:false}, // POP
+  {len:2, hasImm:true},  // CALL
+  {len:1, hasImm:false}, // RET
+];
+
+// Operand types for assembler
+const OP_NONE=0, OP_SREG=1, OP_DREG=2, OP_REGREG=3, OP_DIMM=4, OP_SIMM=5, OP_IMM=6;
+const ASM_TABLE = [
+  {optype:OP_IMM,    opcnt:1}, // JUMP
+  {optype:OP_NONE,   opcnt:0}, // HALT
+  {optype:OP_DIMM,   opcnt:2}, // MOV_IMM
+  {optype:OP_NONE,   opcnt:0}, // NOP
+  {optype:OP_REGREG, opcnt:2}, // MOV_REG
+  {optype:OP_REGREG, opcnt:2}, // ADD
+  {optype:OP_IMM,    opcnt:1}, // JC
+  {optype:OP_IMM,    opcnt:1}, // JZ
+  {optype:OP_DIMM,   opcnt:2}, // LOAD
+  {optype:OP_SIMM,   opcnt:2}, // STORE
+  {optype:OP_SREG,   opcnt:1}, // PUSH
+  {optype:OP_DREG,   opcnt:1}, // POP
+  {optype:OP_IMM,    opcnt:1}, // CALL
+  {optype:OP_NONE,   opcnt:0}, // RET
+];
+
+// ─── ASSEMBLER ───
+function assemble(sourceCode) {
+  const lines = sourceCode.split('\n');
+  const program = [];
+  const errors = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+    // Strip comments
+    const commentIdx = line.search(/[;#]/);
+    if (commentIdx >= 0) line = line.substring(0, commentIdx);
+    line = line.trim();
+    if (!line) continue;
+
+    const tokens = line.split(/[\s,]+/).filter(t => t);
+    if (!tokens.length) continue;
+
+    const mnemonic = tokens[0].toUpperCase();
+    const opcodeIdx = OPCODE_NAMES.indexOf(mnemonic);
+    if (opcodeIdx === -1) {
+      errors.push(`Line ${i+1}: Unknown opcode '${tokens[0]}'`);
+      continue;
+    }
+
+    const meta = ASM_TABLE[opcodeIdx];
+    if (tokens.length - 1 !== meta.opcnt) {
+      errors.push(`Line ${i+1}: '${mnemonic}' expects ${meta.opcnt} operand(s), got ${tokens.length-1}`);
+      continue;
+    }
+
+    let dest = 0, src = 0, imm = 0;
+    let ok = true;
+
+    function parseReg(s) {
+      if (!s || s.length !== 2) return -1;
+      if (s[0].toUpperCase() !== 'R') return -1;
+      const n = parseInt(s[1]);
+      return (n >= 0 && n <= 3) ? n : -1;
+    }
+    function parseImm(s) {
+      if (!s) return -1;
+      const n = parseInt(s, s.startsWith('0x') ? 16 : 10);
+      return (isNaN(n) || n < 0 || n > 255) ? -1 : n;
+    }
+
+    switch (meta.optype) {
+      case OP_NONE: break;
+      case OP_DREG:
+        dest = parseReg(tokens[1]);
+        if (dest < 0) { errors.push(`Line ${i+1}: Invalid register '${tokens[1]}'`); ok = false; }
+        break;
+      case OP_SREG:
+        src = parseReg(tokens[1]);
+        if (src < 0) { errors.push(`Line ${i+1}: Invalid register '${tokens[1]}'`); ok = false; }
+        break;
+      case OP_REGREG:
+        dest = parseReg(tokens[1]);
+        src = parseReg(tokens[2]);
+        if (dest < 0) { errors.push(`Line ${i+1}: Invalid dest register '${tokens[1]}'`); ok = false; }
+        if (src < 0) { errors.push(`Line ${i+1}: Invalid src register '${tokens[2]}'`); ok = false; }
+        break;
+      case OP_DIMM:
+        dest = parseReg(tokens[1]);
+        imm = parseImm(tokens[2]);
+        if (dest < 0) { errors.push(`Line ${i+1}: Invalid register '${tokens[1]}'`); ok = false; }
+        if (imm < 0) { errors.push(`Line ${i+1}: Invalid immediate '${tokens[2]}'`); ok = false; }
+        break;
+      case OP_SIMM:
+        src = parseReg(tokens[1]);
+        imm = parseImm(tokens[2]);
+        if (src < 0) { errors.push(`Line ${i+1}: Invalid register '${tokens[1]}'`); ok = false; }
+        if (imm < 0) { errors.push(`Line ${i+1}: Invalid immediate '${tokens[2]}'`); ok = false; }
+        break;
+      case OP_IMM:
+        imm = parseImm(tokens[1]);
+        if (imm < 0) { errors.push(`Line ${i+1}: Invalid immediate '${tokens[1]}'`); ok = false; }
+        break;
+    }
+    if (!ok) continue;
+
+    const firstByte = ((opcodeIdx << 4) | ((dest & 0x03) << 2) | (src & 0x03)) & 0xFF;
+    program.push(firstByte);
+    if (ISA_META[opcodeIdx].len === 2) {
+      program.push(imm & 0xFF);
+    }
+  }
+
+  return { program, errors };
+}
+
+// ─── MACHINE STATE ───
+let machine = createMachine();
+let programBytes = [];
+let prevRegs = [0,0,0,0];
+let isRunning = false;
+let runTimer = null;
+
+function createMachine() {
+  return {
+    pc: 0,
+    sp: 255,
+    regs: [0, 0, 0, 0],
+    memory: new Uint8Array(256),
+    bus: 0,
+    ir: 0,
+    zeroFlag: false,
+    carryFlag: false,
+    running: true,
+    shouldAdvance: true,
+    stage: 'fetch',   // fetch | decode | execute | advance
+    decoded: null,
+    cycleCount: 0
+  };
+}
+
+function resetMachine() {
+  stopRun();
+  prevRegs = [...machine.regs];
+  machine = createMachine();
+  updateUI();
+  log('Machine reset', 'info');
+  setStatus('Machine reset — ready');
+}
+
+// ─── CPU STEP ───
+function cpuStep() {
+  if (!machine.running) return false;
+  if (machine.pc >= programBytes.length) {
+    machine.running = false;
+    log('PC exceeded program size — halted', 'error');
+    return false;
+  }
+
+  switch (machine.stage) {
+    case 'fetch': {
+      machine.shouldAdvance = true;
+      machine.ir = programBytes[machine.pc];
+      log(`FETCH  PC=${machine.pc}  IR=0x${hex(machine.ir)}`, 'fetch');
+      machine.stage = 'decode';
+      break;
+    }
+    case 'decode': {
+      const opcode = (machine.ir >> 4) & 0x0F;
+      const destReg = (machine.ir >> 2) & 0x03;
+      const srcReg = machine.ir & 0x03;
+      let imm = 0;
+      let instrLen = 1;
+
+      if (opcode >= ISA_META.length) {
+        log(`Invalid opcode ${opcode} at PC ${machine.pc}`, 'error');
+        machine.decoded = { opcode: OPCODES.HALT, dest: 0, src: 0, imm: 0, len: 1 };
+      } else {
+        instrLen = ISA_META[opcode].len;
+        if (ISA_META[opcode].hasImm) {
+          if (machine.pc + 1 < programBytes.length) {
+            imm = programBytes[machine.pc + 1];
+          } else {
+            log('Missing immediate byte — halting', 'error');
+            machine.decoded = { opcode: OPCODES.HALT, dest: 0, src: 0, imm: 0, len: 1 };
+            machine.stage = 'execute';
+            break;
+          }
+        }
+        machine.decoded = { opcode, dest: destReg, src: srcReg, imm, len: instrLen };
+      }
+
+      const d = machine.decoded;
+      let msg = `DECODE opcode=${OPCODE_NAMES[d.opcode] || d.opcode} dest=R${d.dest} src=R${d.src}`;
+      if (ISA_META[d.opcode]?.hasImm) msg += ` imm=${d.imm}`;
+      log(msg, 'decode');
+      machine.stage = 'execute';
+      break;
+    }
+    case 'execute': {
+      prevRegs = [...machine.regs];
+      const d = machine.decoded;
+      executeInstruction(d);
+      machine.stage = 'advance';
+      machine.cycleCount++;
+      break;
+    }
+    case 'advance': {
+      if (machine.running && machine.shouldAdvance) {
+        machine.pc += machine.decoded.len;
+        log(`ADVANCE  next PC=${machine.pc}`, 'advance');
+      }
+      machine.stage = 'fetch';
+      break;
+    }
+  }
+
+  updateUI();
+  return machine.running;
+}
+
+function executeInstruction(d) {
+  switch (d.opcode) {
+    case OPCODES.NOP:
+      log('EXEC   NOP', 'execute');
+      break;
+
+    case OPCODES.HALT:
+      log('EXEC   HALT — CPU stopped', 'execute');
+      machine.running = false;
+      break;
+
+    case OPCODES.JUMP:
+      log(`EXEC   JUMP → ${d.imm}`, 'execute');
+      machine.pc = d.imm;
+      machine.shouldAdvance = false;
+      break;
+
+    case OPCODES.MOV_IMM:
+      log(`EXEC   MOV_IMM R${d.dest} ← ${d.imm}`, 'execute');
+      machine.bus = d.imm;
+      machine.regs[d.dest] = machine.bus;
+      break;
+
+    case OPCODES.MOV_REG:
+      log(`EXEC   MOV_REG R${d.dest} ← R${d.src} (${machine.regs[d.src]})`, 'execute');
+      machine.bus = machine.regs[d.src];
+      machine.regs[d.dest] = machine.bus;
+      break;
+
+    case OPCODES.ADD: {
+      const a = machine.regs[d.dest];
+      const b = machine.regs[d.src];
+      const sum = a + b;
+      const result = sum & 0xFF;
+      machine.bus = result;
+      machine.regs[d.dest] = result;
+      machine.carryFlag = sum > 255;
+      machine.zeroFlag = result === 0;
+      log(`EXEC   ADD R${d.dest}=R${d.dest}+R${d.src} → ${a}+${b}=${result} Z=${machine.zeroFlag?1:0} C=${machine.carryFlag?1:0}`, 'execute');
+      break;
+    }
+
+    case OPCODES.JZ:
+      log(`EXEC   JZ ${d.imm} (Z=${machine.zeroFlag?1:0})`, 'execute');
+      if (machine.zeroFlag) {
+        machine.pc = d.imm;
+        machine.shouldAdvance = false;
+      }
+      break;
+
+    case OPCODES.JC:
+      log(`EXEC   JC ${d.imm} (C=${machine.carryFlag?1:0})`, 'execute');
+      if (machine.carryFlag) {
+        machine.pc = d.imm;
+        machine.shouldAdvance = false;
+      }
+      break;
+
+    case OPCODES.LOAD:
+      machine.bus = machine.memory[d.imm];
+      machine.regs[d.dest] = machine.bus;
+      log(`EXEC   LOAD R${d.dest} ← mem[${d.imm}] (${machine.bus})`, 'execute');
+      break;
+
+    case OPCODES.STORE:
+      machine.bus = machine.regs[d.src];
+      machine.memory[d.imm] = machine.bus;
+      log(`EXEC   STORE mem[${d.imm}] ← R${d.src} (${machine.bus})`, 'execute');
+      break;
+
+    case OPCODES.PUSH:
+      if (machine.sp === 0) {
+        log('EXEC   PUSH — Stack overflow!', 'error');
+        machine.running = false;
+      } else {
+        machine.bus = machine.regs[d.src];
+        machine.memory[machine.sp] = machine.bus;
+        machine.sp--;
+        log(`EXEC   PUSH R${d.src} (${machine.bus}) → SP=${machine.sp}`, 'execute');
+      }
+      break;
+
+    case OPCODES.POP:
+      if (machine.sp === 255) {
+        log('EXEC   POP — Stack underflow!', 'error');
+        machine.running = false;
+      } else {
+        machine.sp++;
+        machine.bus = machine.memory[machine.sp];
+        machine.regs[d.dest] = machine.bus;
+        log(`EXEC   POP R${d.dest} ← (${machine.bus}) SP=${machine.sp}`, 'execute');
+      }
+      break;
+
+    case OPCODES.CALL:
+      if (machine.sp === 0) {
+        log('EXEC   CALL — Stack overflow!', 'error');
+        machine.running = false;
+      } else {
+        const retAddr = machine.pc + d.len;
+        machine.bus = retAddr;
+        machine.memory[machine.sp] = machine.bus;
+        machine.sp--;
+        machine.pc = d.imm;
+        machine.shouldAdvance = false;
+        log(`EXEC   CALL ${d.imm} (return=${retAddr}) SP=${machine.sp}`, 'execute');
+      }
+      break;
+
+    case OPCODES.RET:
+      if (machine.sp === 255) {
+        log('EXEC   RET — Stack underflow!', 'error');
+        machine.running = false;
+      } else {
+        machine.sp++;
+        machine.bus = machine.memory[machine.sp];
+        machine.pc = machine.bus;
+        machine.shouldAdvance = false;
+        log(`EXEC   RET → PC=${machine.pc} SP=${machine.sp}`, 'execute');
+      }
+      break;
+
+    default:
+      log(`EXEC   Unknown opcode ${d.opcode}`, 'error');
+      break;
+  }
+}
+
+// ─── UI ───
+function hex(v) { return v.toString(16).toUpperCase().padStart(2, '0'); }
+function bin8(v) { return v.toString(2).padStart(8, '0'); }
+
+function updateUI() {
+  // Cards
+  document.getElementById('val-pc').textContent = machine.pc;
+  document.getElementById('val-sp').textContent = machine.sp;
+  document.getElementById('val-bus').textContent = machine.bus;
+  document.getElementById('val-ir').textContent = '0x' + hex(machine.ir);
+
+  // Registers
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('reg-' + i).textContent = machine.regs[i];
+    document.getElementById('reghex-' + i).textContent = '0x' + hex(machine.regs[i]);
+    document.getElementById('regbin-' + i).textContent = bin8(machine.regs[i]);
+    const box = document.getElementById('rbox-' + i);
+    if (machine.regs[i] !== prevRegs[i]) {
+      box.classList.add('changed');
+      setTimeout(() => box.classList.remove('changed'), 600);
+    }
+  }
+
+  // Flags
+  const zBox = document.getElementById('flag-z-box');
+  const cBox = document.getElementById('flag-c-box');
+  document.getElementById('flag-z').textContent = machine.zeroFlag ? '1' : '0';
+  document.getElementById('flag-c').textContent = machine.carryFlag ? '1' : '0';
+  zBox.className = 'flag-box ' + (machine.zeroFlag ? 'on' : 'off');
+  cBox.className = 'flag-box ' + (machine.carryFlag ? 'on' : 'off');
+
+  // Pipeline
+  const stages = ['fetch', 'decode', 'execute', 'advance'];
+  stages.forEach(s => {
+    const el = document.getElementById('pipe-' + s);
+    el.classList.toggle('active', machine.stage === s);
+  });
+
+  // Memory
+  renderMemory();
+
+  // Status
+  if (!machine.running) {
+    setStatus(`CPU halted — ${machine.cycleCount} cycles executed`);
+  }
+}
+
+function renderMemory() {
+  const grid = document.getElementById('memory-grid');
+  grid.innerHTML = '';
+
+  // Header row
+  const corner = document.createElement('div');
+  corner.className = 'mem-header';
+  corner.textContent = '';
+  grid.appendChild(corner);
+  for (let c = 0; c < 16; c++) {
+    const h = document.createElement('div');
+    h.className = 'mem-header';
+    h.textContent = c.toString(16).toUpperCase();
+    grid.appendChild(h);
+  }
+
+  // Data rows
+  for (let r = 0; r < 16; r++) {
+    const label = document.createElement('div');
+    label.className = 'mem-row-label';
+    label.textContent = (r * 16).toString(16).toUpperCase().padStart(2, '0');
+    grid.appendChild(label);
+
+    for (let c = 0; c < 16; c++) {
+      const addr = r * 16 + c;
+      const val = machine.memory[addr];
+      const cell = document.createElement('div');
+      cell.className = 'mem-cell';
+      cell.textContent = hex(val);
+      cell.setAttribute('data-tooltip', `[${addr}] = ${val} (0x${hex(val)})`);
+
+      if (val !== 0) cell.classList.add('nonzero');
+      if (addr > machine.sp && addr <= 255) cell.classList.add('stack');
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function log(msg, type = 'info') {
+  const el = document.getElementById('log-output');
+  const div = document.createElement('div');
+  div.className = 'log-' + type;
+  div.textContent = msg;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function setStatus(msg) {
+  document.getElementById('status-left').textContent = msg;
+}
+
+function updateLineNumbers() {
+  const editor = document.getElementById('code-editor');
+  const lines = editor.value.split('\n').length;
+  const nums = document.getElementById('line-numbers');
+  let html = '';
+  for (let i = 1; i <= lines; i++) html += i + '\n';
+  nums.textContent = html;
+}
+
+// ─── Actions ───
+function doAssemble() {
+  stopRun();
+  const source = document.getElementById('code-editor').value;
+  const result = assemble(source);
+
+  document.getElementById('log-output').innerHTML = '';
+
+  if (result.errors.length > 0) {
+    result.errors.forEach(e => log(e, 'error'));
+    document.getElementById('editor-dot').className = 'dot error';
+    document.getElementById('editor-status').textContent = `${result.errors.length} error(s)`;
+    setStatus('Assembly failed');
+    return;
+  }
+
+  programBytes = result.program;
+  machine = createMachine();
+  prevRegs = [0,0,0,0];
+
+  document.getElementById('editor-dot').className = 'dot';
+  document.getElementById('editor-status').textContent = `Assembled — ${programBytes.length} bytes`;
+
+  log(`Assembled ${programBytes.length} bytes: ${programBytes.map(b => '0x' + hex(b)).join(' ')}`, 'info');
+  setStatus(`Assembled ${programBytes.length} bytes — ready to execute`);
+  updateUI();
+}
+
+function doStep() {
+  if (!programBytes.length) {
+    log('No program loaded — click Assemble first', 'error');
+    return;
+  }
+  if (!machine.running) {
+    log('CPU is halted — click Reset to restart', 'info');
+    return;
+  }
+  cpuStep();
+}
+
+function doRun() {
+  if (!programBytes.length) {
+    log('No program loaded — click Assemble first', 'error');
+    return;
+  }
+  if (isRunning) {
+    stopRun();
+    return;
+  }
+
+  isRunning = true;
+  document.getElementById('btn-run').textContent = '⏸ Pause';
+
+  function tick() {
+    if (!isRunning || !machine.running) {
+      stopRun();
+      return;
+    }
+    cpuStep();
+    const speed = parseInt(document.getElementById('speed-slider').value);
+    const delay = Math.max(5, 505 - speed * 5);
+    runTimer = setTimeout(tick, delay);
+  }
+  tick();
+}
+
+function stopRun() {
+  isRunning = false;
+  if (runTimer) { clearTimeout(runTimer); runTimer = null; }
+  document.getElementById('btn-run').textContent = '▶ Run';
+}
+
+// ─── Sample Programs ───
+const SAMPLES = {
+  square: `; =========================================================
+; Square Calculation: N² where N is in R0
+; =========================================================
+
+; Load N = 5 into R0
+MOV_IMM R0, 5
+
+; Initialize result R1 = 0
+MOV_IMM R1, 0
+
+; Copy loop counter into R2
+MOV_REG R2, R0
+
+; R3 = 255 (acts as -1 in two's complement)
+MOV_IMM R3, 255
+
+; --- LOOP ---
+; If R2 == 0, jump to STORE (byte 13)
+JZ 13
+
+; R1 = R1 + R0
+ADD R1, R0
+
+; R2 = R2 - 1 (via +255)
+ADD R2, R3
+
+; Back to loop check
+JUMP 7
+; --- END LOOP ---
+
+; Store result at memory[50]
+STORE R1, 50
+
+HALT`,
+
+  fibonacci: `; =========================================================
+; Fibonacci: Computes terms until overflow
+; Stores results in memory starting at address 40
+; =========================================================
+
+; R0 = previous term (starts at 0)
+MOV_IMM R0, 0
+
+; R1 = current term (starts at 1)
+MOV_IMM R1, 1
+
+; R2 = memory pointer (starts at 40)
+MOV_IMM R2, 40
+
+; Store first two terms
+STORE R0, 40
+STORE R1, 41
+
+; R3 = 255 (-1 for decrement trick)
+MOV_IMM R3, 1
+
+; --- LOOP (byte 12) ---
+; next = R0 + R1
+MOV_REG R3, R0
+ADD R3, R1
+
+; If carry, we overflowed — stop
+JC 24
+
+; Shift: R0 = R1, R1 = R3
+MOV_REG R0, R1
+MOV_REG R1, R3
+
+; Jump back to loop
+JUMP 12
+
+; HALT (byte 24)
+HALT`,
+
+  countdown: `; =========================================================
+; Countdown from 10 to 0
+; Stores each value in memory starting at address 30
+; =========================================================
+
+; R0 = counter = 10
+MOV_IMM R0, 10
+
+; R1 = memory address = 30
+MOV_IMM R1, 30
+
+; R2 = -1 (255 in two's complement)
+MOV_IMM R2, 255
+
+; R3 = 1 for incrementing address
+MOV_IMM R3, 1
+
+; --- LOOP (byte 8) ---
+; Store R0 at mem[R1] — we use STORE with R0
+; Since STORE takes imm address, we store at 30
+STORE R0, 30
+
+; Decrement counter
+ADD R0, R2
+
+; If zero, done
+JZ 18
+
+; Loop back
+JUMP 8
+; --- END ---
+
+; HALT (byte 18)
+HALT`,
+
+  subroutine: `; =========================================================
+; Subroutine Demo: CALL and RET
+; Calls a "double" subroutine that doubles R0
+; =========================================================
+
+; R0 = 7
+MOV_IMM R0, 7
+
+; Call the double subroutine at byte 8
+CALL 8
+
+; Store result and halt
+STORE R0, 50
+HALT
+
+; --- SUBROUTINE "double" (byte 8) ---
+; R1 = R0
+MOV_REG R1, R0
+
+; R0 = R0 + R1 (doubles R0)
+ADD R0, R1
+
+; Return
+RET`
+};
+
+// ─── Init ───
+document.getElementById('code-editor').addEventListener('input', updateLineNumbers);
+document.getElementById('code-editor').addEventListener('scroll', function() {
+  document.getElementById('line-numbers').style.marginTop = -this.scrollTop + 'px';
+});
+document.getElementById('code-editor').addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = this.selectionStart, end = this.selectionEnd;
+    this.value = this.value.substring(0, s) + '    ' + this.value.substring(end);
+    this.selectionStart = this.selectionEnd = s + 4;
+    updateLineNumbers();
+  }
+  if (e.ctrlKey && e.key === 'Enter') {
+    e.preventDefault();
+    doAssemble();
+  }
+});
+
+document.getElementById('btn-assemble').addEventListener('click', doAssemble);
+document.getElementById('btn-step').addEventListener('click', doStep);
+document.getElementById('btn-run').addEventListener('click', doRun);
+document.getElementById('btn-reset').addEventListener('click', () => {
+  resetMachine();
+  if (programBytes.length) {
+    log('Reset — program still loaded, ready to re-execute', 'info');
+  }
+});
+document.getElementById('btn-clear-log').addEventListener('click', () => {
+  document.getElementById('log-output').innerHTML = '';
+});
+
+document.getElementById('sample-select').addEventListener('change', function() {
+  if (this.value && SAMPLES[this.value]) {
+    document.getElementById('code-editor').value = SAMPLES[this.value];
+    updateLineNumbers();
+    this.value = '';
+    doAssemble();
+  }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'F5') { e.preventDefault(); doRun(); }
+  if (e.key === 'F10') { e.preventDefault(); doStep(); }
+  if (e.key === 'F9') { e.preventDefault(); doAssemble(); }
+});
+
+// Initial setup
+updateLineNumbers();
+renderMemory();
+</script>
+</body>
+</html>
