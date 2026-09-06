@@ -4,9 +4,10 @@
 ; Example: N = 15 -> Result = 225 (0x19 stored in R1 and memory[50])
 ; =========================================================
 
-; Byte 0 (len 2): Load N = 15 into R0
-; You can change this N as you wish but pay attention to the fact that its an 8-bit CPU and sqaures above 255 will overflow for eg: 256 becomes 1 
-MOV_IMM R0, 15
+; Byte 0 (len 2): Load N into R0
+; Change N as you wish. Squares above 255 will overflow 
+; (eg 256 becomes 0)
+MOV_IMM R0, 5
 
 ; Byte 2 (len 2): Initialize result accumulator R1 = 0
 MOV_IMM R1, 0
