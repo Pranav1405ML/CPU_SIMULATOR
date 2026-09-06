@@ -165,6 +165,7 @@ int assemble_file(const char *in_filename, const char *out_hex_filename, uint8_t
     char token_array[5][16]; 
     int line_num = 0;
     int buf_idx = 0;
+    int error_count = 0;
 
     printf("--> Assembling '%s'...\n", in_filename);
 
@@ -184,26 +185,35 @@ int assemble_file(const char *in_filename, const char *out_hex_filename, uint8_t
         int opcode = get_opcode(token_array[0]);
         if (opcode == -1) {
             printf("[Line %d] Error: Unknown opcode '%s'\n", line_num, token_array[0]);
+            error_count++;
             continue;
         }
 
         if (token_count != (table[opcode].operand_cnt + 1)) {
             printf("[Line %d] Error: Opcode '%s' expects %d operands, got %d\n",
                    line_num, token_array[0], table[opcode].operand_cnt, token_count - 1);
+            error_count++;
             continue;
         }
 
         int check = parse_operands(opcode, &dest_reg, &src_reg, &imm, token_array);
         if (check == -1) {
             printf("[Line %d] Error: Failed to parse operands for '%s'\n", line_num, token_array[0]);
+            error_count++;
             continue;
         }
 
         encode_and_write(opcode, dest_reg, src_reg, imm, fp2, program_buffer, &buf_idx, max_size);
     }
 
-    printf("--> Assembly completed successfully: %d bytes generated.\n", buf_idx);
     if (fp2) fclose(fp2);
     fclose(fp1);
+
+    if (error_count > 0) {
+        printf("--> Assembly FAILED: %d error(s) found.\n", error_count);
+        return -1;
+    }
+
+    printf("--> Assembly completed successfully: %d bytes generated.\n", buf_idx);
     return buf_idx;
 }
