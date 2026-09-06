@@ -1,3 +1,6 @@
+#ifndef MACHINE_H
+#define MACHINE_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "../instruction/instruction.h"
@@ -36,3 +39,6 @@ struct Decoded_instruction DECODE(int PC, uint8_t *program, uint8_t fetched_inst
 void EXECUTE(struct Decoded_instruction *decoded, struct Machine *machine, uint8_t *program, bool *advance);
 void ADVANCE(uint8_t instr_length, struct Machine *machine);
 struct ALU_result add_8bit(uint8_t a, uint8_t b);
+
+#endif
+
